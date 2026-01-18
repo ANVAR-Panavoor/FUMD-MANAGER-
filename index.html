@@ -184,36 +184,3 @@
 
 </body>
 </html>
-    function addTransaction() {
-        const desc = document.getElementById('desc').value;
-        const amt = document.getElementById('amt').value;
-        const type = document.getElementById('type').value;
-
-        if (desc === '' || amt === '') {
-            alert('ദയവായി വിവരങ്ങളും തുകയും നൽകുക');
-            return;
-        }
-
-        transactions.push({ desc, amt, type });
-        document.getElementById('desc').value = '';
-        document.getElementById('amt').value = '';
-        updateUI();
-    }
-
-    function remove(index) {
-        transactions.splice(index, 1);
-        updateUI();
-    }
-
-    function clearAll() {
-        if(confirm("എല്ലാ വിവരങ്ങളും ഒഴിവാക്കണോ?")) {
-            transactions = [];
-            updateUI();
-        }
-    }
-
-    updateUI();
-</script>
-
-</body>
-</html>
