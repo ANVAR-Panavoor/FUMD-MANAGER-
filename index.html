@@ -8,24 +8,19 @@
         :root { --primary: #1a73e8; --income: #2ecc71; --expense: #e74c3c; --bg: #f0f2f5; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; }
         .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        
-        /* യൂണിറ്റ് നെയിം എഡിറ്റ് ചെയ്യാനുള്ള സ്റ്റൈൽ */
         .unit-header { text-align: center; font-weight: bold; padding: 12px; cursor: pointer; background: #e8f0fe; border: 2px dashed var(--primary); border-radius: 10px; margin-bottom: 20px; color: var(--primary); }
-        .unit-header:hover { background: #d2e3fc; }
-
         .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px; }
         .card { padding: 20px; border-radius: 15px; color: white; text-align: center; font-weight: bold; }
         .card.in { background: var(--income); }
         .card.out { background: var(--expense); }
         .card.bal { background: var(--primary); }
-        
         .section { background: #f8f9fa; padding: 20px; border-radius: 15px; border: 1px solid #ddd; margin-bottom: 25px; }
         input, select, button { padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; margin: 5px 0; }
         button { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; }
-        
         .tab-btn { padding: 10px 20px; cursor: pointer; border: none; background: #ddd; margin-right: 5px; border-radius: 5px; }
         .tab-btn.active { background: var(--primary); color: white; }
-        
+        .list-item { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 10px; border-radius: 8px; margin-bottom: 5px; border: 1px solid #eee; }
+        .del-btn { background: #e74c3c; padding: 5px 10px; font-size: 12px; border-radius: 5px; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
         .wa-btn { background: #25D366; color: white; padding: 5px 10px; text-decoration: none; border-radius: 5px; font-size: 12px; display: inline-block; }
@@ -35,10 +30,7 @@
 
 <div class="container">
     <h1 style="text-align:center; color: var(--primary); margin-bottom:5px;">Fund Manager Pro</h1>
-    
-    <div class="unit-header" id="unitDisplay" onclick="editUnitName()">
-        JSC Konganamkode Unit (ഇവിടെ ക്ലിക്ക് ചെയ്ത് പേര് മാറ്റാം)
-    </div>
+    <div class="unit-header" id="unitDisplay" onclick="editUnitName()">JSC Konganamkode Unit</div>
     
     <div class="dashboard">
         <div class="card in">വരവ്<br><span id="totalIn">0</span></div>
@@ -63,32 +55,32 @@
                 <option value="income">വരവ് (In)</option>
                 <option value="expense">ചെലവ് (Out)</option>
             </select>
-            <button onclick="addEntry()">Save Record</button>
+            <button onclick="addEntry()">Save & Share</button>
         </div>
     </div>
 
     <div id="membersTab" class="section" style="display:none;">
         <h3>മെമ്പർമാരെ ചേർക്കുക</h3>
-        <div style="display: flex; gap: 10px;">
+        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
             <input type="text" id="mName" placeholder="പേര്" style="flex:1;">
             <input type="number" id="mPhone" placeholder="ഫോൺ">
             <button onclick="addMember()">Add</button>
         </div>
+        <div id="memberListUI"></div>
     </div>
 
     <div id="settingsTab" class="section" style="display:none;">
         <h3>ഫണ്ട് ഇനങ്ങൾ</h3>
-        <div style="display: flex; gap: 10px;">
+        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
             <input type="text" id="newCat" placeholder="പുതിയ ഇനം" style="flex:1;">
             <button onclick="addCategory()">Add</button>
         </div>
+        <div id="categoryListUI"></div>
     </div>
 
     <div style="overflow-x:auto;">
         <table>
-            <thead>
-                <tr><th>Date</th><th>Details</th><th>Amount</th><th>Action</th></tr>
-            </thead>
+            <thead><tr><th>Date</th><th>Details</th><th>Amount</th><th>Action</th></tr></thead>
             <tbody id="ledgerBody"></tbody>
         </table>
     </div>
@@ -100,15 +92,6 @@
     let categories = JSON.parse(localStorage.getItem('jsc_cats')) || ["Masavari", "Jilani Sharif"];
     let unitName = localStorage.getItem('jsc_unit_title') || "JSC Konganamkode Unit";
 
-    function editUnitName() {
-        let newName = prompt("യൂണിറ്റ് പേര് നൽകുക:", unitName);
-        if(newName) {
-            unitName = newName;
-            localStorage.setItem('jsc_unit_title', unitName);
-            document.getElementById('unitDisplay').innerText = unitName;
-        }
-    }
-
     function showTab(tab) {
         document.getElementById('entriesTab').style.display = tab === 'entries' ? 'block' : 'none';
         document.getElementById('membersTab').style.display = tab === 'members' ? 'block' : 'none';
@@ -117,27 +100,71 @@
         event.currentTarget.classList.add('active');
     }
 
+    function editUnitName() {
+        let n = prompt("Unit Name:", unitName);
+        if(n) { unitName = n; localStorage.setItem('jsc_unit_title', n); renderAll(); }
+    }
+
+    function addCategory() {
+        let c = document.getElementById('newCat').value;
+        if(c) { categories.push(c); localStorage.setItem('jsc_cats', JSON.stringify(categories)); document.getElementById('newCat').value=''; renderAll(); }
+    }
+
+    function deleteCategory(i) {
+        if(confirm("ഈ ഇനം ഒഴിവാക്കണോ?")) { categories.splice(i, 1); localStorage.setItem('jsc_cats', JSON.stringify(categories)); renderAll(); }
+    }
+
+    function addMember() {
+        let n = document.getElementById('mName').value;
+        let p = document.getElementById('mPhone').value;
+        if(n && p) { members.push({name:n, phone:p}); localStorage.setItem('jsc_members', JSON.stringify(members)); document.getElementById('mName').value=''; document.getElementById('mPhone').value=''; renderAll(); }
+    }
+
+    function deleteMember(i) {
+        if(confirm("ഈ മെമ്പറെ ഒഴിവാക്കണോ?")) { members.splice(i, 1); localStorage.setItem('jsc_members', JSON.stringify(members)); renderAll(); }
+    }
+
     function renderAll() {
         document.getElementById('unitDisplay').innerText = unitName;
-        // റെൻഡറിംഗ് ലോജിക് (മുൻപത്തെ പോലെ)
-        const catSelect = document.getElementById('catSelect');
-        catSelect.innerHTML = '<option value="">ഫണ്ട് ഇനം</option>';
-        categories.forEach(c => catSelect.innerHTML += `<option value="${c}">${c}</option>`);
+        
+        // Render Categories Settings
+        let catUI = document.getElementById('categoryListUI');
+        catUI.innerHTML = '';
+        categories.forEach((c, i) => {
+            catUI.innerHTML += `<div class="list-item">${c} <button class="del-btn" onclick="deleteCategory(${i})">Delete</button></div>`;
+        });
 
-        const nameSelect = document.getElementById('nameSelect');
-        nameSelect.innerHTML = '<option value="">മെമ്പർ</option>';
-        members.forEach(m => nameSelect.innerHTML += `<option value="${m.name}|${m.phone}">${m.name}</option>`);
+        // Render Members Settings
+        let memUI = document.getElementById('memberListUI');
+        memUI.innerHTML = '';
+        members.forEach((m, i) => {
+            memUI.innerHTML += `<div class="list-item">${m.name} (${m.phone}) <button class="del-btn" onclick="deleteMember(${i})">Delete</button></div>`;
+        });
 
+        // Update Select Boxes
+        const cs = document.getElementById('catSelect');
+        cs.innerHTML = '<option value="">ഫണ്ട് ഇനം</option>';
+        categories.forEach(c => cs.innerHTML += `<option value="${c}">${c}</option>`);
+
+        const ns = document.getElementById('nameSelect');
+        ns.innerHTML = '<option value="">മെമ്പർ</option>';
+        members.forEach(m => ns.innerHTML += `<option value="${m.name}|${m.phone}">${m.name}</option>`);
+
+        // Render Ledger
         const tbody = document.getElementById('ledgerBody');
         tbody.innerHTML = '';
         let tin = 0, tout = 0;
         entries.forEach((e, i) => {
             if(e.type === 'income') tin += parseFloat(e.amt); else tout += parseFloat(e.amt);
+            let wa = `https://wa.me/91${e.phone}?text=Hi ${e.name}, JSC Unit-ൽ നിങ്ങളുടെ ₹${e.amt} (${e.category}) ലഭിച്ചു. നന്ദി.`;
             tbody.innerHTML += `<tr>
                 <td>${e.date}</td>
                 <td><b>${e.name}</b><br><small>${e.category}</small></td>
                 <td style="color:${e.type==='income'?'green':'red'}">₹${e.amt}</td>
-                <td><button onclick="deleteEntry(${i})">❌</button></td>
+                <td>
+                    <a href="${wa}" class="wa-btn" target="_blank">WA</a>
+                    <button onclick="deleteEntry(${i})" style="border:none; background:none; color:red; cursor:pointer; font-size:16px;">❌</button>
+                </td>
             </tr>`;
         });
         document.getElementById('totalIn').innerText = tin;
@@ -146,41 +173,21 @@
     }
 
     function addEntry() {
-        const date = document.getElementById('date').value;
-        const cat = document.getElementById('catSelect').value;
-        const mData = document.getElementById('nameSelect').value.split('|');
-        const amt = document.getElementById('amt').value;
-        const type = document.getElementById('type').value;
-        if(date && cat && mData[0] && amt) {
-            entries.push({date, category:cat, name:mData[0], phone:mData[1], amt, type});
+        const d = document.getElementById('date').value;
+        const c = document.getElementById('catSelect').value;
+        const m = document.getElementById('nameSelect').value.split('|');
+        const a = document.getElementById('amt').value;
+        const t = document.getElementById('type').value;
+        if(d && c && m[0] && a) {
+            entries.push({date:d, category:c, name:m[0], phone:m[1], amt:a, type:t});
             localStorage.setItem('jsc_pro_data', JSON.stringify(entries));
             renderAll();
         }
     }
 
-    function addMember() {
-        const name = document.getElementById('mName').value;
-        const phone = document.getElementById('mPhone').value;
-        if(name && phone) {
-            members.push({name, phone});
-            localStorage.setItem('jsc_members', JSON.stringify(members));
-            renderAll();
-        }
-    }
-
-    function addCategory() {
-        const cat = document.getElementById('newCat').value;
-        if(cat) {
-            categories.push(cat);
-            localStorage.setItem('jsc_cats', JSON.stringify(categories));
-            renderAll();
-        }
-    }
-
-    function deleteEntry(i) { entries.splice(i,1); localStorage.setItem('jsc_pro_data',JSON.stringify(entries)); renderAll(); }
+    function deleteEntry(i) { if(confirm("ഈ എൻട്രി നീക്കം ചെയ്യണോ?")) { entries.splice(i,1); localStorage.setItem('jsc_pro_data',JSON.stringify(entries)); renderAll(); } }
 
     renderAll();
 </script>
-
 </body>
 </html>
