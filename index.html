@@ -1,9 +1,11 @@
-<!DOCTYPE html>
+<!<!DOCTYPE html>
 <html lang="ml">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fund Manager Pro</title>
+    <title>JSC Fund Manager Pro</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <style>
         :root { --primary: #1a73e8; --income: #2ecc71; --expense: #e74c3c; --bg: #f0f2f5; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; }
@@ -15,21 +17,22 @@
         .card.out { background: var(--expense); }
         .card.bal { background: var(--primary); }
         .section { background: #f8f9fa; padding: 15px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 25px; }
-        h3 { margin-top: 0; color: #333; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
         input, select, button { padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; margin: 5px 0; width: 100%; box-sizing: border-box; }
         button { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; }
-        .list-item { display: flex; justify-content: space-between; align-items: center; background: white; padding: 10px; border-radius: 8px; margin-bottom: 5px; border: 1px solid #eee; }
-        .del-btn { background: #e74c3c; color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px; width: auto !important; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        .list-box { background: white; border-radius: 8px; border: 1px solid #eee; margin-bottom: 15px; max-height: 180px; overflow-y: auto; }
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; }
-        .wa-btn { background: #25D366; color: white; padding: 5px 8px; text-decoration: none; border-radius: 5px; font-size: 11px; display: inline-block; }
+        .status-icon { font-size: 18px; margin-right: 5px; }
+        .btn-pdf { background: #e74c3c; margin-top: 5px; }
+        .btn-wa { background: #25D366; margin-top: 10px; }
+        .share-btn { background: #25D366; color: white; padding: 5px 8px; text-decoration: none; border-radius: 5px; font-size: 11px; display: inline-block; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 style="text-align:center; color: var(--primary); margin-bottom: 10px;">Fund Manager Pro</h2>
-    <div class="unit-header" id="unitDisplay" onclick="editUnitName()">JSC Konganamkode Unit (പേര് മാറ്റാൻ ഇവിടെ അമർത്തുക)</div>
+    <div class="unit-header" id="unitDisplay" onclick="editUnitName()">JSC Konganamkode Unit</div>
     
     <div class="dashboard">
         <div class="card in">വരവ്<br><span id="totalIn">0</span></div>
@@ -38,49 +41,42 @@
     </div>
 
     <div class="section">
-        <h3>പുതിയ ഇടപാട് (New Entry)</h3>
+        <h3>ഇടപാടുകൾ (Transactions)</h3>
+        <div style="overflow-x:auto;">
+            <table id="reportTable">
+                <tbody id="ledgerBody"></tbody>
+            </table>
+        </div>
+        <hr style="margin:15px 0;">
         <input type="date" id="date">
         <select id="catSelect"></select>
         <select id="nameSelect"></select>
-        <input type="number" id="amt" placeholder="തുക (Amount)">
+        <input type="number" id="amt" placeholder="തുക">
         <select id="type">
-            <option value="income">വരവ് (Income)</option>
-            <option value="expense">ചെലവ് (Expense)</option>
+            <option value="income">വരവ് (Cash Received ✅)</option>
+            <option value="expense">ചെലവ് (Payment Out ❌)</option>
         </select>
-        <button onclick="addEntry()">സേവ് ചെയ്യുക (Save)</button>
-    </div>
-
-    <div class="section">
-        <h3>മെമ്പർമാരെ ചേർക്കുക/ഒഴിവാക്കുക</h3>
-        <input type="text" id="mName" placeholder="മെമ്പർ പേര്">
-        <input type="number" id="mPhone" placeholder="ഫോൺ നമ്പർ (WhatsApp)">
-        <button onclick="addMember()" style="background: var(--income);">മെമ്പറെ ചേർക്കുക (Add Member)</button>
-        <div id="memberListUI" style="margin-top: 10px;"></div>
-    </div>
-
-    <div class="section">
-        <h3>ഫണ്ട് ഇനങ്ങൾ (Categories)</h3>
-        <input type="text" id="newCat" placeholder="ഉദാ: മാസവരി, വരിസംഖ്യ">
-        <button onclick="addCategory()" style="background: var(--income);">ഇനം ചേർക്കുക (Add Item)</button>
-        <div id="categoryListUI" style="margin-top: 10px;"></div>
+        <button onclick="addEntry()">Save & Send Receipt</button>
     </div>
 
     <div class="section">
         <h3>റിപ്പോർട്ടുകൾ (Reports)</h3>
-        <button onclick="shareFullReport()" style="background: #25D366; margin-bottom: 10px;">WhatsApp വഴി അയക്കുക</button>
-        <button onclick="exportToExcel()" style="background: #1d6f42;">Excel ഡൗൺലോഡ്</button>
+        <button class="btn-wa" onclick="shareFullReport()">WhatsApp Full Report</button>
+        <button class="btn-pdf" onclick="exportPDF()">Download PDF Report</button>
+        <button style="background: #1d6f42; margin-top:5px;" onclick="exportToExcel()">Download Excel</button>
     </div>
 
-    <div class="section" style="display:block;">
-        <h3>ഇടപാടുകളുടെ പട്ടിക (Transactions)</h3>
-        <div style="overflow-x:auto;">
-            <table>
-                <thead><tr><th>വിവരം</th><th>തുക</th><th>മാറ്റം</th></tr></thead>
-                <tbody id="ledgerBody"></tbody>
-            </table>
-        </div>
+    <div class="section">
+        <h3>മെമ്പർമാർ & ഇനങ്ങൾ</h3>
+        <div id="memberListUI" class="list-box"></div>
+        <input type="text" id="mName" placeholder="മെമ്പർ പേര്">
+        <input type="number" id="mPhone" placeholder="ഫോൺ">
+        <button onclick="addMember()" style="background: var(--income);">Add Member</button>
+        <br><br>
+        <div id="categoryListUI" class="list-box"></div>
+        <input type="text" id="newCat" placeholder="പുതിയ ഇനം">
+        <button onclick="addCategory()" style="background: var(--income);">Add Item</button>
     </div>
-
 </div>
 
 <script>
@@ -90,70 +86,31 @@
     let unitName = localStorage.getItem('unit_title') || "JSC Konganamkode Unit";
 
     function editUnitName() {
-        let n = prompt("യൂണിറ്റ് പേര് മാറ്റുക:", unitName);
+        let n = prompt("Unit Name:", unitName);
         if(n) { unitName = n; localStorage.setItem('unit_title', n); renderAll(); }
-    }
-
-    function addMember() {
-        let n = document.getElementById('mName').value;
-        let p = document.getElementById('mPhone').value;
-        if(n && p) {
-            members.push({name: n, phone: p});
-            localStorage.setItem('jsc_members', JSON.stringify(members));
-            document.getElementById('mName').value = ''; document.getElementById('mPhone').value = '';
-            renderAll();
-        }
-    }
-
-    function deleteMember(i) {
-        if(confirm("ഈ മെമ്പറെ ഒഴിവാക്കണോ?")) { members.splice(i, 1); localStorage.setItem('jsc_members', JSON.stringify(members)); renderAll(); }
-    }
-
-    function addCategory() {
-        let c = document.getElementById('newCat').value;
-        if(c) {
-            categories.push(c);
-            localStorage.setItem('jsc_cats', JSON.stringify(categories));
-            document.getElementById('newCat').value = '';
-            renderAll();
-        }
-    }
-
-    function deleteCategory(i) {
-        if(confirm("ഈ ഇനം ഒഴിവാക്കണോ?")) { categories.splice(i, 1); localStorage.setItem('jsc_cats', JSON.stringify(categories)); renderAll(); }
     }
 
     function renderAll() {
         document.getElementById('unitDisplay').innerText = unitName;
-        
-        let catUI = document.getElementById('categoryListUI');
-        catUI.innerHTML = '';
-        categories.forEach((c, i) => {
-            catUI.innerHTML += `<div class="list-item">${c} <button class="del-btn" onclick="deleteCategory(${i})">Delete</button></div>`;
-        });
-
-        let memUI = document.getElementById('memberListUI');
-        memUI.innerHTML = '';
-        members.forEach((m, i) => {
-            memUI.innerHTML += `<div class="list-item">${m.name} (${m.phone}) <button class="del-btn" onclick="deleteMember(${i})">Delete</button></div>`;
-        });
-
+        document.getElementById('categoryListUI').innerHTML = categories.map((c, i) => `<div class="list-item">${c} <span style="color:red; cursor:pointer;" onclick="deleteCategory(${i})">X</span></div>`).join('');
+        document.getElementById('memberListUI').innerHTML = members.map((m, i) => `<div class="list-item">${m.name} <span style="color:red; cursor:pointer;" onclick="deleteMember(${i})">X</span></div>`).join('');
         document.getElementById('catSelect').innerHTML = '<option value="">ഇനം തിരഞ്ഞെടുക്കുക</option>' + categories.map(c => `<option value="${c}">${c}</option>`).join('');
         document.getElementById('nameSelect').innerHTML = '<option value="">മെമ്പറെ തിരഞ്ഞെടുക്കുക</option>' + members.map(m => `<option value="${m.name}|${m.phone}">${m.name}</option>`).join('');
 
         const tbody = document.getElementById('ledgerBody');
         tbody.innerHTML = '';
         let tin = 0, tout = 0;
-        entries.forEach((e, i) => {
-            if(e.type === 'income') tin += parseFloat(e.amt); else tout += parseFloat(e.amt);
-            let wa = `https://wa.me/91${e.phone}?text=${encodeURIComponent(unitName + ':\nHi ' + e.name + ', ₹' + e.amt + ' (' + e.category + ') ലഭിച്ചു. നന്ദി.')}`;
+
+        entries.slice().reverse().forEach((e, i) => {
+            let actualIndex = entries.length - 1 - i;
+            let isInc = e.type === 'income';
+            if(isInc) tin += parseFloat(e.amt); else tout += parseFloat(e.amt);
+            
             tbody.innerHTML += `<tr>
-                <td><b>${e.name}</b><br><small>${e.date}</small></td>
-                <td style="color:${e.type==='income'?'green':'red'}">₹${e.amt}</td>
-                <td>
-                    <a href="${wa}" class="wa-btn" target="_blank">WA</a>
-                    <span onclick="deleteEntry(${i})" style="color:red; margin-left:10px; cursor:pointer; font-weight:bold;">❌</span>
-                </td>
+                <td><span class="status-icon">${isInc ? '✅' : '❌'}</span></td>
+                <td><b>${e.name}</b><br><small>${e.date} | ${e.category}</small></td>
+                <td style="color:${isInc ? 'green' : 'red'}">₹${e.amt}</td>
+                <td><span onclick="deleteEntry(${actualIndex})" style="color:red; cursor:pointer;">🗑️</span></td>
             </tr>`;
         });
 
@@ -172,31 +129,46 @@
             entries.push({date:d, category:c, name:m[0], phone:m[1], amt:a, type:t});
             localStorage.setItem('jsc_pro_data', JSON.stringify(entries));
             renderAll();
-        } else { alert("വിവരങ്ങൾ പൂർണ്ണമായി നൽകുക"); }
+            let msg = `*${unitName}*\n\nപ്രിയപ്പെട്ട ${m[0]},\nനിങ്ങളുടെ ₹${a} (${c}) സ്വീകരിച്ചിരിക്കുന്നു. ✅\nനന്ദി.`;
+            window.open(`https://wa.me/91${m[1]}?text=${encodeURIComponent(msg)}`);
+        }
     }
 
-    function deleteEntry(i) { if(confirm("ഇത് ഒഴിവാക്കണോ?")) { entries.splice(i,1); localStorage.setItem('jsc_pro_data',JSON.stringify(entries)); renderAll(); } }
+    function exportPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.text(unitName + " - Fund Report", 14, 15);
+        let rows = entries.map(e => [e.date, e.name, e.category, e.amt, e.type === 'income' ? 'Received' : 'Paid']);
+        doc.autoTable({ head: [['Date', 'Name', 'Category', 'Amount', 'Status']], body: rows, startY: 25 });
+        doc.save("Report.pdf");
+    }
+
+    function addMember() {
+        let n = document.getElementById('mName').value;
+        let p = document.getElementById('mPhone').value;
+        if(n && p) { members.push({name:n, phone:p}); localStorage.setItem('jsc_members', JSON.stringify(members)); renderAll(); }
+    }
+
+    function addCategory() {
+        let c = document.getElementById('newCat').value;
+        if(c) { categories.push(c); localStorage.setItem('jsc_cats', JSON.stringify(categories)); renderAll(); }
+    }
+
+    function deleteEntry(i) { if(confirm("Delete?")) { entries.splice(i,1); localStorage.setItem('jsc_pro_data',JSON.stringify(entries)); renderAll(); } }
+    function deleteMember(i) { members.splice(i,1); localStorage.setItem('jsc_members',JSON.stringify(members)); renderAll(); }
+    function deleteCategory(i) { categories.splice(i,1); localStorage.setItem('jsc_cats',JSON.stringify(categories)); renderAll(); }
 
     function shareFullReport() {
-        let txt = `*${unitName} - റിപ്പോർട്ട്*\n\n`;
-        txt += `വരവ്: ₹${document.getElementById('totalIn').innerText}\n`;
-        txt += `ചെലവ്: ₹${document.getElementById('totalOut').innerText}\n`;
-        txt += `ബാക്കി: ₹${document.getElementById('balance').innerText}\n\n`;
-        txt += `*അവസാന ഇടപാടുകൾ:*\n`;
-        entries.slice(-15).forEach(e => { txt += `${e.date} - ${e.name}: ₹${e.amt}\n`; });
+        let txt = `*${unitName} - റിപ്പോർട്ട്*\nവരവ്: ₹${document.getElementById('totalIn').innerText} ✅\nചെലവ്: ₹${document.getElementById('totalOut').innerText} ❌\nബാക്കി: ₹${document.getElementById('balance').innerText}\n\n*അവസാന ഇടപാടുകൾ:*`;
+        entries.slice(-5).forEach(e => txt += `\n• ${e.name}: ₹${e.amt}`);
         window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`);
     }
 
     function exportToExcel() {
-        let csv = "Date,Name,Category,Amount,Type\n";
-        entries.forEach(e => csv += `${e.date},${e.name},${e.category},${e.amt},${e.type}\n`);
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.setAttribute("download", "JSC_Report.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        let csv = "Date,Name,Category,Amount,Type\n" + entries.map(e => `${e.date},${e.name},${e.category},${e.amt},${e.type}`).join("\n");
+        let blob = new Blob([csv], {type: 'text/csv'});
+        let link = document.createElement('a');
+        link.href = URL.createObjectURL(blob); link.download = 'Report.csv'; link.click();
     }
 
     renderAll();
