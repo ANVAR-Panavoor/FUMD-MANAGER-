@@ -4,229 +4,84 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JSC Fund Manager Pro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --primary: #1a73e8; --income: #2ecc71; --expense: #e74c3c; --bg: #f0f2f5; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; }
-        .container { max-width: 1000px; margin: auto; }
+        :root { --primary: #0f4c81; --income: #1b8a4f; --expense: #d32f2f; --bg: #eff3f6; }
+        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: var(--bg); margin: 0; padding: 15px; }
+        .container { max-width: 800px; margin: auto; }
         
-        .unit-header { text-align: center; font-weight: bold; padding: 15px; background: white; border-radius: 15px; margin-bottom: 15px; color: var(--primary); box-shadow: 0 4px 10px rgba(0,0,0,0.05); cursor: pointer; }
+        .unit-header { 
+            text-align: center; font-weight: bold; padding: 25px; 
+            background: linear-gradient(135deg, #0f4c81, #2575fc); 
+            border-radius: 20px; margin-bottom: 25px; color: white; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15); cursor: pointer;
+        }
+        .unit-header h1 { margin: 0; font-size: 24px; text-transform: uppercase; letter-spacing: 1px; }
 
-        /* ബോക്സ് സ്റ്റൈൽ */
-        .collapsible-card { background: white; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; }
-        .card-header { padding: 20px; background: #fff; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f0f2f5; }
-        .card-header h2 { margin: 0; font-size: 18px; color: #333; }
-        .card-content { padding: 20px; display: none; background: #fff; }
-        .arrow { transition: 0.3s; font-weight: bold; color: #888; }
+        /* കാർഡ് സ്റ്റൈൽ */
+        .collapsible-card { 
+            background: white; border-radius: 18px; margin-bottom: 15px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow: hidden; 
+            transition: all 0.3s ease; border: 1px solid rgba(0,0,0,0.05);
+        }
+        .collapsible-card:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.08); }
         
-        /* തുറക്കുമ്പോൾ ഉള്ള മാറ്റം */
+        .card-header { 
+            padding: 18px 22px; background: #fff; cursor: pointer; 
+            display: flex; justify-content: space-between; align-items: center; 
+        }
+        .card-header h2 { margin: 0; font-size: 17px; color: #444; display: flex; align-items: center; gap: 12px; }
+        .card-header i { color: var(--primary); font-size: 18px; }
+        .card-content { padding: 20px; display: none; background: #fff; border-top: 1px solid #f1f1f1; }
+        .arrow { transition: 0.3s; color: #aaa; }
+        
+        .active-card { border: 1.5px solid var(--primary); }
         .active-card .card-content { display: block; }
-        .active-card .arrow { transform: rotate(180deg); }
+        .active-card .arrow { transform: rotate(180deg); color: var(--primary); }
 
-        /* റിപ്പോർട്ട് ടാബുകൾ */
-        .report-tabs { display: flex; gap: 8px; margin-bottom: 15px; overflow-x: auto; }
-        .tab-btn { padding: 8px 15px; border-radius: 20px; border: 1px solid #ddd; background: #fff; cursor: pointer; font-size: 13px; white-space: nowrap; }
+        /* റിപ്പോർട്ട് സ്റ്റാറ്റസ് */
+        .dashboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+        .stat-card { 
+            padding: 15px 5px; border-radius: 15px; color: white; 
+            text-align: center; font-size: 11px; font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .stat-card span { font-size: 16px; display: block; margin-top: 5px; }
+
+        /* ബട്ടണുകൾ */
+        input, select, button { padding: 14px; border: 1px solid #e0e0e0; border-radius: 12px; font-size: 15px; margin: 6px 0; width: 100%; box-sizing: border-box; outline: none; }
+        button { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:active { transform: scale(0.98); }
+        
+        .list-box { background: #fdfdfd; border-radius: 12px; margin-bottom: 12px; max-height: 200px; overflow-y: auto; border: 1px solid #eee; }
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid #f5f5f5; font-size: 14px; color: #555; }
+        
+        .tab-btn { padding: 10px 15px; border-radius: 10px; border: 1px solid #eee; background: #f9f9f9; cursor: pointer; font-size: 12px; flex: 1; }
         .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-        
-        .dashboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
-        .stat-card { padding: 10px; border-radius: 10px; color: white; text-align: center; font-size: 12px; font-weight: bold; }
 
-        input, select, button { padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; margin: 5px 0; width: 100%; box-sizing: border-box; }
-        button { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; }
-        
-        .list-box { background: #f8f9fa; border-radius: 8px; margin-bottom: 10px; max-height: 200px; overflow-y: auto; border: 1px solid #eee; }
-        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; }
-        .del-btn { color: red; font-weight: bold; cursor: pointer; padding: 5px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 15px; }
+        th { text-align: left; padding: 10px; color: #888; border-bottom: 2px solid #f1f1f1; }
+        td { padding: 12px 10px; border-bottom: 1px solid #f9f9f9; }
 
-        table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #eee; }
+        .wa-btn { background: #25D366; }
+        .pdf-btn { background: #d32f2f; }
         
-        .filter-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-        
-        @media print { .no-print, .card-header { display: none !important; } .card-content { display: block !important; } }
+        @media print { .no-print { display: none !important; } }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="unit-header" id="unitDisplay" onclick="editUnitName()">JSC Konganamkode Unit</div>
+    <div class="unit-header" id="unitDisplay" onclick="editUnitName()">
+        <h1 id="unitTitle">JSC KONGANAMKODE UNIT</h1>
+        <small style="opacity: 0.8;">Fund Manager Pro</small>
+    </div>
 
     <div class="collapsible-card" id="card-reports">
         <div class="card-header" onclick="toggleCard('card-reports')">
-            <h2>📊 റിപ്പോർട്ടുകൾ (Reports)</h2>
-            <span class="arrow">▼</span>
+            <h2><i class="fa-solid fa-chart-line"></i> റിപ്പോർട്ടുകൾ (Reports)</h2>
+            <i class="fa-solid fa-chevron-down arrow"></i>
         </div>
         <div class="card-content">
-            <div class="report-tabs no-print">
-                <button class="tab-btn active" onclick="switchReport('all', this)">ആകെ റിപ്പോർട്ട്</button>
-                <button class="tab-btn" onclick="switchReport('income', this)">വരവ് മാത്രം</button>
-                <button class="tab-btn" onclick="switchReport('expense', this)">ചെലവ് മാത്രം</button>
-            </div>
-            <div class="filter-row no-print">
-                <input type="month" id="monthFilter" onchange="renderAll()">
-                <select id="yearFilter" onchange="renderAll()">
-                    <option value="">വർഷം (എല്ലാം)</option>
-                    <option value="2025">2025</option>
-                    <option value="2026">2026</option>
-                </select>
-            </div>
-            <div class="dashboard">
-                <div class="stat-card" style="background: var(--income)">വരവ്<br><span id="totalIn">0</span></div>
-                <div class="stat-card" style="background: var(--expense)">ചെലവ്<br><span id="totalOut">0</span></div>
-                <div class="stat-card" style="background: var(--primary)">ബാക്കി<br><span id="balance">0</span></div>
-            </div>
-            <div style="overflow-x:auto;">
-                <table>
-                    <thead><tr><th>വിവരം</th><th>തുക</th><th class="no-print"></th></tr></thead>
-                    <tbody id="ledgerBody"></tbody>
-                </table>
-            </div>
-            <div class="filter-row no-print" style="margin-top:15px;">
-                <button onclick="shareReport()" style="background: #25D366;">WhatsApp Share</button>
-                <button onclick="window.print()" style="background: #e74c3c;">Save PDF</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="collapsible-card" id="card-add">
-        <div class="card-header" onclick="toggleCard('card-add')">
-            <h2>📝 പുതിയ ഇടപാട് (Add Entry)</h2>
-            <span class="arrow">▼</span>
-        </div>
-        <div class="card-content">
-            <input type="date" id="date">
-            <select id="catSelect"></select>
-            <select id="nameSelect"></select>
-            <input type="number" id="amt" placeholder="തുക">
-            <select id="type">
-                <option value="income">വരവ് (Income ✅)</option>
-                <option value="expense">ചെലവ് (Expense ❌)</option>
-            </select>
-            <button onclick="addEntry()">സേവ് ചെയ്ത് രസീത് അയക്കുക</button>
-        </div>
-    </div>
-
-    <div class="collapsible-card" id="card-items">
-        <div class="card-header" onclick="toggleCard('card-items')">
-            <h2>📂 ഫണ്ട് ഇനങ്ങൾ (Categories)</h2>
-            <span class="arrow">▼</span>
-        </div>
-        <div class="card-content">
-            <div id="categoryListUI" class="list-box"></div>
-            <div style="display:flex; gap:5px;">
-                <input type="text" id="newCat" placeholder="പുതിയ ഇനം">
-                <button onclick="addCategory()" style="width:80px; background:var(--income);">Add</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="collapsible-card" id="card-members">
-        <div class="card-header" onclick="toggleCard('card-members')">
-            <h2>👥 മെമ്പർമാർ (Members)</h2>
-            <span class="arrow">▼</span>
-        </div>
-        <div class="card-content">
-            <div id="memberListUI" class="list-box"></div>
-            <input type="text" id="mName" placeholder="പേര്">
-            <input type="number" id="mPhone" placeholder="WhatsApp നമ്പർ">
-            <button onclick="addMember()" style="background:var(--income);">Add Member</button>
-        </div>
-    </div>
-
-</div>
-
-<script>
-    let entries = JSON.parse(localStorage.getItem('jsc_pro_data')) || [];
-    let members = JSON.parse(localStorage.getItem('jsc_members')) || [];
-    let categories = JSON.parse(localStorage.getItem('jsc_cats')) || ["മാസവരി", "ജിലാനി ഷെരീഫ്"];
-    let unitName = localStorage.getItem('unit_title') || "JSC Konganamkode Unit";
-    let currentReportType = 'all';
-
-    function toggleCard(cardId) {
-        const card = document.getElementById(cardId);
-        card.classList.toggle('active-card');
-    }
-
-    function switchReport(type, btn) {
-        currentReportType = type;
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        renderAll();
-    }
-
-    function renderAll() {
-        document.getElementById('unitDisplay').innerText = unitName;
-        document.getElementById('categoryListUI').innerHTML = categories.map((c, i) => `<div class="list-item">${c} <span class="del-btn" onclick="deleteCategory(${i})">✕</span></div>`).join('');
-        document.getElementById('memberListUI').innerHTML = members.map((m, i) => `<div class="list-item">${m.name} <span class="del-btn" onclick="deleteMember(${i})">✕</span></div>`).join('');
-        document.getElementById('catSelect').innerHTML = '<option value="">ഇനം തിരഞ്ഞെടുക്കുക</option>' + categories.map(c => `<option value="${c}">${c}</option>`).join('');
-        document.getElementById('nameSelect').innerHTML = '<option value="">മെമ്പറെ തിരഞ്ഞെടുക്കുക</option>' + members.map(m => `<option value="${m.name}|${m.phone}">${m.name}</option>`).join('');
-
-        const month = document.getElementById('monthFilter').value;
-        const year = document.getElementById('yearFilter').value;
-        const tbody = document.getElementById('ledgerBody');
-        tbody.innerHTML = '';
-        let tin = 0, tout = 0;
-
-        entries.forEach((e, idx) => {
-            const dateMatch = (month ? e.date.startsWith(month) : true) && (year ? e.date.startsWith(year) : true);
-            const typeMatch = (currentReportType === 'all') || (e.type === currentReportType);
-
-            if (dateMatch && typeMatch) {
-                let isInc = e.type === 'income';
-                if(isInc) tin += parseFloat(e.amt); else tout += parseFloat(e.amt);
-                let row = `<tr>
-                    <td><b>${e.name}</b><br><small>${e.date} | ${e.category}</small></td>
-                    <td style="color:${isInc?'green':'red'}">₹${e.amt}</td>
-                    <td class="no-print"><span onclick="deleteEntry(${idx})" style="color:red; cursor:pointer;">🗑️</span></td>
-                </tr>`;
-                tbody.insertAdjacentHTML('afterbegin', row);
-            }
-        });
-        document.getElementById('totalIn').innerText = tin;
-        document.getElementById('totalOut').innerText = tout;
-        document.getElementById('balance').innerText = tin - tout;
-    }
-
-    function addEntry() {
-        const d = document.getElementById('date').value;
-        const c = document.getElementById('catSelect').value;
-        const m = document.getElementById('nameSelect').value.split('|');
-        const a = document.getElementById('amt').value;
-        const t = document.getElementById('type').value;
-        if(d && c && m[0] && a) {
-            entries.push({date:d, category:c, name:m[0], phone:m[1], amt:a, type:t});
-            localStorage.setItem('jsc_pro_data', JSON.stringify(entries));
-            renderAll();
-            if(confirm("സേവ് ചെയ്തു! രസീത് അയക്കണോ?")) {
-                let msg = `*${unitName}*\n\nപ്രിയപ്പെട്ട ${m[0]},\nനിങ്ങളുടെ ₹${a} (${c}) വരവ് വെച്ചിട്ടുണ്ട്. ✅\nനന്ദി.`;
-                window.open(`https://wa.me/91${m[1]}?text=${encodeURIComponent(msg)}`);
-            }
-        } else { alert("വിവരങ്ങൾ പൂർണ്ണമല്ല!"); }
-    }
-
-    function shareReport() {
-        let month = document.getElementById('monthFilter').value;
-        let txt = `*${unitName} - റിപ്പോർട്ട് ${month || ""}*\n\nവരവ്: ₹${document.getElementById('totalIn').innerText} ✅\nചെലവ്: ₹${document.getElementById('totalOut').innerText} ❌\nബാക്കി: ₹${document.getElementById('balance').innerText}\n\nJSC Pro വഴി തയ്യാറാക്കിയത്.`;
-        window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`);
-    }
-
-    function addMember() {
-        let n = document.getElementById('mName').value;
-        let p = document.getElementById('mPhone').value;
-        if(n && p) { members.push({name:n, phone:p}); localStorage.setItem('jsc_members', JSON.stringify(members)); renderAll(); }
-    }
-
-    function addCategory() {
-        let c = document.getElementById('newCat').value;
-        if(c) { categories.push(c); localStorage.setItem('jsc_cats', JSON.stringify(categories)); renderAll(); }
-    }
-
-    function deleteEntry(i) { if(confirm("ഡിലീറ്റ് ചെയ്യണോ?")) { entries.splice(i,1); localStorage.setItem('jsc_pro_data',JSON.stringify(entries)); renderAll(); } }
-    function deleteMember(i) { if(confirm("മെമ്പറെ ഒഴിവാക്കണോ?")) { members.splice(i,1); localStorage.setItem('jsc_members',JSON.stringify(members)); renderAll(); } }
-    function deleteCategory(i) { if(confirm("ഇനം ഒഴിവാക്കണോ?")) { categories.splice(i,1); localStorage.setItem('jsc_cats',JSON.stringify(categories)); renderAll(); } }
-    function editUnitName() { let n = prompt("യൂണിറ്റ് പേര്:", unitName); if(n) { unitName = n; localStorage.setItem('unit_title', n); renderAll(); } }
-
-    renderAll();
-</script>
-</body>
-</html>
-
+            <div style="display: flex; gap: 8px; margin-bottom:
+                
