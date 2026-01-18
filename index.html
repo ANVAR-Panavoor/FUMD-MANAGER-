@@ -3,101 +3,187 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rupee Ledger Pro - JSC Panavoor</title>
+    <title>Fund Manager Pro</title>
     <style>
-        :root {
-            --primary: #1a73e8;
-            --income: #28a745;
-            --expense: #dc3545;
-            --bg: #f8f9fa;
-        }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg); margin: 0; padding: 15px; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: var(--primary); margin-bottom: 5px; }
-        .subtitle { text-align: center; color: #666; font-size: 0.9em; margin-bottom: 20px; }
+        :root { --primary: #1a73e8; --income: #2ecc71; --expense: #e74c3c; --bg: #f0f2f5; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         
-        .summary { display: flex; gap: 10px; margin-bottom: 20px; }
-        .card { flex: 1; padding: 15px; border-radius: 10px; color: white; text-align: center; }
-        .card.inc { background: var(--income); }
-        .card.exp { background: var(--expense); }
+        /* യൂണിറ്റ് നെയിം എഡിറ്റ് ചെയ്യാനുള്ള സ്റ്റൈൽ */
+        .unit-header { text-align: center; font-weight: bold; padding: 12px; cursor: pointer; background: #e8f0fe; border: 2px dashed var(--primary); border-radius: 10px; margin-bottom: 20px; color: var(--primary); }
+        .unit-header:hover { background: #d2e3fc; }
+
+        .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .card { padding: 20px; border-radius: 15px; color: white; text-align: center; font-weight: bold; }
+        .card.in { background: var(--income); }
+        .card.out { background: var(--expense); }
         .card.bal { background: var(--primary); }
-
-        .form-group { display: flex; flex-direction: column; gap: 10px; background: #eee; padding: 15px; border-radius: 10px; }
-        input, select, button { padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; }
+        
+        .section { background: #f8f9fa; padding: 20px; border-radius: 15px; border: 1px solid #ddd; margin-bottom: 25px; }
+        input, select, button { padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; margin: 5px 0; }
         button { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; }
-        button:active { transform: scale(0.98); }
-
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        
+        .tab-btn { padding: 10px 20px; cursor: pointer; border: none; background: #ddd; margin-right: 5px; border-radius: 5px; }
+        .tab-btn.active { background: var(--primary); color: white; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background: #f1f1f1; font-size: 14px; }
-        .type-inc { color: var(--income); font-weight: bold; }
-        .type-exp { color: var(--expense); font-weight: bold; }
-        .delete-btn { color: #999; cursor: pointer; font-size: 12px; border: none; background: none; }
+        .wa-btn { background: #25D366; color: white; padding: 5px 10px; text-decoration: none; border-radius: 5px; font-size: 12px; display: inline-block; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Rupee Ledger Pro</h2>
-    <div class="subtitle">JSC Konganamkode Unit (Jilani Sharif Fund)</div>
-
-    <div class="summary">
-        <div class="card inc">വരവ്<br><span id="totalIncome">0</span></div>
-        <div class="card exp">ചെലവ്<br><span id="totalExpense">0</span></div>
+    <h1 style="text-align:center; color: var(--primary); margin-bottom:5px;">Fund Manager Pro</h1>
+    
+    <div class="unit-header" id="unitDisplay" onclick="editUnitName()">
+        JSC Konganamkode Unit (ഇവിടെ ക്ലിക്ക് ചെയ്ത് പേര് മാറ്റാം)
+    </div>
+    
+    <div class="dashboard">
+        <div class="card in">വരവ്<br><span id="totalIn">0</span></div>
+        <div class="card out">ചെലവ്<br><span id="totalOut">0</span></div>
         <div class="card bal">ബാക്കി<br><span id="balance">0</span></div>
     </div>
 
-    <div class="form-group">
-        <input type="text" id="desc" placeholder="വിവരണം (ഉദാ: Masavari)">
-        <input type="number" id="amt" placeholder="തുക (Amount)">
-        <select id="type">
-            <option value="income">വരവ് (Income)</option>
-            <option value="expense">ചെലവ് (Expense)</option>
-        </select>
-        <button onclick="addTransaction()">Add Entry</button>
+    <div style="margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 5px;">
+        <button class="tab-btn active" onclick="showTab('entries')">Transactions</button>
+        <button class="tab-btn" onclick="showTab('members')">Members</button>
+        <button class="tab-btn" onclick="showTab('settings')">Settings (ഇനങ്ങൾ)</button>
     </div>
 
-    <table id="ledgerTable">
-        <thead>
-            <tr>
-                <th>വിവരണം</th>
-                <th>തുക</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody id="list"></tbody>
-    </table>
-    <button onclick="clearAll()" style="background:#666; margin-top: 20px; width: 100%;">Clear All Data</button>
+    <div id="entriesTab" class="section">
+        <h3>പുതിയ എൻട്രി</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+            <input type="date" id="date">
+            <select id="catSelect"><option value="">ഫണ്ട് ഇനം</option></select>
+            <select id="nameSelect"><option value="">മെമ്പർ</option></select>
+            <input type="number" id="amt" placeholder="തുക">
+            <select id="type">
+                <option value="income">വരവ് (In)</option>
+                <option value="expense">ചെലവ് (Out)</option>
+            </select>
+            <button onclick="addEntry()">Save Record</button>
+        </div>
+    </div>
+
+    <div id="membersTab" class="section" style="display:none;">
+        <h3>മെമ്പർമാരെ ചേർക്കുക</h3>
+        <div style="display: flex; gap: 10px;">
+            <input type="text" id="mName" placeholder="പേര്" style="flex:1;">
+            <input type="number" id="mPhone" placeholder="ഫോൺ">
+            <button onclick="addMember()">Add</button>
+        </div>
+    </div>
+
+    <div id="settingsTab" class="section" style="display:none;">
+        <h3>ഫണ്ട് ഇനങ്ങൾ</h3>
+        <div style="display: flex; gap: 10px;">
+            <input type="text" id="newCat" placeholder="പുതിയ ഇനം" style="flex:1;">
+            <button onclick="addCategory()">Add</button>
+        </div>
+    </div>
+
+    <div style="overflow-x:auto;">
+        <table>
+            <thead>
+                <tr><th>Date</th><th>Details</th><th>Amount</th><th>Action</th></tr>
+            </thead>
+            <tbody id="ledgerBody"></tbody>
+        </table>
+    </div>
 </div>
 
 <script>
-    let transactions = JSON.parse(localStorage.getItem('jsc_ledger')) || [];
+    let entries = JSON.parse(localStorage.getItem('jsc_pro_data')) || [];
+    let members = JSON.parse(localStorage.getItem('jsc_members')) || [];
+    let categories = JSON.parse(localStorage.getItem('jsc_cats')) || ["Masavari", "Jilani Sharif"];
+    let unitName = localStorage.getItem('jsc_unit_title') || "JSC Konganamkode Unit";
 
-    function updateUI() {
-        const list = document.getElementById('list');
-        list.innerHTML = '';
-        let inc = 0, exp = 0;
-
-        transactions.forEach((t, index) => {
-            const row = document.createElement('tr');
-            const amountClass = t.type === 'income' ? 'type-inc' : 'type-exp';
-            if(t.type === 'income') inc += parseFloat(t.amt);
-            else exp += parseFloat(t.amt);
-
-            row.innerHTML = `
-                <td>${t.desc}</td>
-                <td class="${amountClass}">₹${t.amt}</td>
-                <td><button class="delete-btn" onclick="remove(${index})">❌</button></td>
-            `;
-            list.appendChild(row);
-        });
-
-        document.getElementById('totalIncome').innerText = inc;
-        document.getElementById('totalExpense').innerText = exp;
-        document.getElementById('balance').innerText = inc - exp;
-        localStorage.setItem('jsc_ledger', JSON.stringify(transactions));
+    function editUnitName() {
+        let newName = prompt("യൂണിറ്റ് പേര് നൽകുക:", unitName);
+        if(newName) {
+            unitName = newName;
+            localStorage.setItem('jsc_unit_title', unitName);
+            document.getElementById('unitDisplay').innerText = unitName;
+        }
     }
 
+    function showTab(tab) {
+        document.getElementById('entriesTab').style.display = tab === 'entries' ? 'block' : 'none';
+        document.getElementById('membersTab').style.display = tab === 'members' ? 'block' : 'none';
+        document.getElementById('settingsTab').style.display = tab === 'settings' ? 'block' : 'none';
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+    }
+
+    function renderAll() {
+        document.getElementById('unitDisplay').innerText = unitName;
+        // റെൻഡറിംഗ് ലോജിക് (മുൻപത്തെ പോലെ)
+        const catSelect = document.getElementById('catSelect');
+        catSelect.innerHTML = '<option value="">ഫണ്ട് ഇനം</option>';
+        categories.forEach(c => catSelect.innerHTML += `<option value="${c}">${c}</option>`);
+
+        const nameSelect = document.getElementById('nameSelect');
+        nameSelect.innerHTML = '<option value="">മെമ്പർ</option>';
+        members.forEach(m => nameSelect.innerHTML += `<option value="${m.name}|${m.phone}">${m.name}</option>`);
+
+        const tbody = document.getElementById('ledgerBody');
+        tbody.innerHTML = '';
+        let tin = 0, tout = 0;
+        entries.forEach((e, i) => {
+            if(e.type === 'income') tin += parseFloat(e.amt); else tout += parseFloat(e.amt);
+            tbody.innerHTML += `<tr>
+                <td>${e.date}</td>
+                <td><b>${e.name}</b><br><small>${e.category}</small></td>
+                <td style="color:${e.type==='income'?'green':'red'}">₹${e.amt}</td>
+                <td><button onclick="deleteEntry(${i})">❌</button></td>
+            </tr>`;
+        });
+        document.getElementById('totalIn').innerText = tin;
+        document.getElementById('totalOut').innerText = tout;
+        document.getElementById('balance').innerText = tin - tout;
+    }
+
+    function addEntry() {
+        const date = document.getElementById('date').value;
+        const cat = document.getElementById('catSelect').value;
+        const mData = document.getElementById('nameSelect').value.split('|');
+        const amt = document.getElementById('amt').value;
+        const type = document.getElementById('type').value;
+        if(date && cat && mData[0] && amt) {
+            entries.push({date, category:cat, name:mData[0], phone:mData[1], amt, type});
+            localStorage.setItem('jsc_pro_data', JSON.stringify(entries));
+            renderAll();
+        }
+    }
+
+    function addMember() {
+        const name = document.getElementById('mName').value;
+        const phone = document.getElementById('mPhone').value;
+        if(name && phone) {
+            members.push({name, phone});
+            localStorage.setItem('jsc_members', JSON.stringify(members));
+            renderAll();
+        }
+    }
+
+    function addCategory() {
+        const cat = document.getElementById('newCat').value;
+        if(cat) {
+            categories.push(cat);
+            localStorage.setItem('jsc_cats', JSON.stringify(categories));
+            renderAll();
+        }
+    }
+
+    function deleteEntry(i) { entries.splice(i,1); localStorage.setItem('jsc_pro_data',JSON.stringify(entries)); renderAll(); }
+
+    renderAll();
+</script>
+
+</body>
+</html>
     function addTransaction() {
         const desc = document.getElementById('desc').value;
         const amt = document.getElementById('amt').value;
