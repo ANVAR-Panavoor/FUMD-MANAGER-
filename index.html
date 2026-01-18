@@ -8,27 +8,35 @@
         :root { --primary: #1a73e8; --income: #2ecc71; --expense: #e74c3c; --bg: #f0f2f5; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; }
         .container { max-width: 1000px; margin: auto; background: white; padding: 15px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .unit-header { text-align: center; font-weight: bold; padding: 12px; cursor: pointer; background: #e8f0fe; border-radius: 10px; margin-bottom: 20px; color: var(--primary); }
-        .dashboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
-        .card { padding: 15px; border-radius: 12px; color: white; text-align: center; font-size: 14px; font-weight: bold; }
+        .unit-header { text-align: center; font-weight: bold; padding: 12px; cursor: pointer; background: #e8f0fe; border-radius: 10px; margin-bottom: 20px; color: var(--primary); border: 2px dashed #1a73e8; }
+        .dashboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+        .card { padding: 15px; border-radius: 12px; color: white; text-align: center; font-size: 13px; font-weight: bold; }
         .card.in { background: var(--income); }
         .card.out { background: var(--expense); }
         .card.bal { background: var(--primary); }
-        .section { background: #f8f9fa; padding: 15px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 20px; }
+        
+        .tab-bar { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
+        .tab-btn { padding: 10px 15px; border: none; border-radius: 8px; background: #ddd; cursor: pointer; flex: 1; min-width: 100px; font-weight: bold; }
+        .tab-btn.active { background: var(--primary); color: white; }
+
+        .section { background: #f8f9fa; padding: 15px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 20px; display: none; }
+        .section.active { display: block; }
+
         input, select, button { padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; margin: 5px 0; width: 100%; box-sizing: border-box; }
         button { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; }
-        .action-btns { display: flex; gap: 10px; margin-bottom: 15px; }
-        .wa-full-btn { background: #25D366; }
-        .excel-btn { background: #1d6f42; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
+        
+        .list-item { display: flex; justify-content: space-between; align-items: center; background: white; padding: 10px; border-radius: 8px; margin-bottom: 5px; border: 1px solid #eee; }
+        .del-icon { color: #e74c3c; cursor: pointer; font-weight: bold; padding: 5px 10px; border: 1px solid #e74c3c; border-radius: 5px; width: auto !important; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; }
-        .wa-single { background: #25D366; color: white; padding: 5px 8px; text-decoration: none; border-radius: 5px; font-size: 11px; }
+        .wa-single { background: #25D366; color: white; padding: 5px 8px; text-decoration: none; border-radius: 5px; font-size: 11px; display: inline-block; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 style="text-align:center; color: var(--primary);">Fund Manager Pro</h2>
+    <h2 style="text-align:center; color: var(--primary); margin-bottom: 10px;">Fund Manager Pro</h2>
     <div class="unit-header" id="unitDisplay" onclick="editUnitName()">JSC Konganamkode Unit</div>
     
     <div class="dashboard">
@@ -37,112 +45,71 @@
         <div class="card bal">ബാക്കി<br><span id="balance">0</span></div>
     </div>
 
-    <div class="action-btns">
-        <button class="wa-full-btn" onclick="shareFullReport()">Full Report (WA)</button>
-        <button class="excel-btn" onclick="exportToExcel()">Excel Export</button>
+    <div class="tab-bar">
+        <button class="tab-btn active" onclick="openTab('ledgerTab')">ഇടപാടുകൾ</button>
+        <button class="tab-btn" onclick="openTab('memberTab')">മെമ്പർമാർ</button>
+        <button class="tab-btn" onclick="openTab('itemTab')">ഇനങ്ങൾ</button>
+        <button class="tab-btn" onclick="openTab('reportTab')" style="background: #25D366; color: white;">റിപ്പോർട്ട്</button>
     </div>
 
-    <div class="section">
+    <div id="ledgerTab" class="section active">
+        <h3>പുതിയ എൻട്രി</h3>
         <input type="date" id="date">
-        <select id="catSelect"><option value="">ഫണ്ട് ഇനം</option></select>
-        <select id="nameSelect"><option value="">മെമ്പർ</option></select>
+        <select id="catSelect"></select>
+        <select id="nameSelect"></select>
         <input type="number" id="amt" placeholder="തുക">
         <select id="type">
             <option value="income">വരവ് (In)</option>
             <option value="expense">ചെലവ് (Out)</option>
         </select>
-        <button onclick="addEntry()">Save Record</button>
+        <button onclick="addEntry()">സേവ് ചെയ്യുക</button>
+
+        <div style="overflow-x:auto;">
+            <table>
+                <thead><tr><th>വിവരം</th><th>തുക</th><th>Action</th></tr></thead>
+                <tbody id="ledgerBody"></tbody>
+            </table>
+        </div>
     </div>
 
-    <div style="overflow-x:auto;">
-        <table>
-            <thead><tr><th>വിവരം</th><th>തുക</th><th>Action</th></tr></thead>
-            <tbody id="ledgerBody"></tbody>
-        </table>
+    <div id="memberTab" class="section">
+        <h3>മെമ്പർമാരെ ചേർക്കുക</h3>
+        <input type="text" id="mName" placeholder="പേര്">
+        <input type="number" id="mPhone" placeholder="വാട്സാപ്പ് നമ്പർ">
+        <button onclick="addMember()" style="background: var(--income);">Add Member</button>
+        <div id="memberListUI" style="margin-top: 15px;"></div>
     </div>
+
+    <div id="itemTab" class="section">
+        <h3>ഫണ്ട് ഇനങ്ങൾ ചേർക്കുക</h3>
+        <input type="text" id="newCat" placeholder="ഉദാ: മാസവരി, ഫണ്ട്">
+        <button onclick="addCategory()" style="background: var(--income);">Add Category</button>
+        <div id="categoryListUI" style="margin-top: 15px;"></div>
+    </div>
+
+    <div id="reportTab" class="section">
+        <h3>റിപ്പോർട്ട് ഓപ്ഷനുകൾ</h3>
+        <button onclick="shareFullReport()" style="background: #25D366; margin-bottom: 10px;">WhatsApp-ൽ അയക്കുക</button>
+        <button onclick="exportToExcel()" style="background: #1d6f42;">Excel ഡൗൺലോഡ്</button>
+    </div>
+
 </div>
 
 <script>
     let entries = JSON.parse(localStorage.getItem('jsc_pro_data')) || [];
     let members = JSON.parse(localStorage.getItem('jsc_members')) || [];
-    let categories = JSON.parse(localStorage.getItem('jsc_cats')) || ["Masavari", "Jilani Sharif"];
+    let categories = JSON.parse(localStorage.getItem('jsc_cats')) || ["മാസവരി", "ജിലാനി ഷെരീഫ്"];
     let unitName = localStorage.getItem('jsc_unit_title') || "JSC Konganamkode Unit";
 
+    function openTab(tabId) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        event.currentTarget.classList.add('active');
+        renderAll();
+    }
+
     function editUnitName() {
-        let n = prompt("Unit Name:", unitName);
-        if(n) { unitName = n; localStorage.setItem('jsc_unit_title', n); renderAll(); }
-    }
-
-    function renderAll() {
-        document.getElementById('unitDisplay').innerText = unitName;
-        const cs = document.getElementById('catSelect');
-        cs.innerHTML = '<option value="">ഫണ്ട് ഇനം</option>';
-        categories.forEach(c => cs.innerHTML += `<option value="${c}">${c}</option>`);
-
-        const ns = document.getElementById('nameSelect');
-        ns.innerHTML = '<option value="">മെമ്പർ</option>';
-        members.forEach(m => ns.innerHTML += `<option value="${m.name}|${m.phone}">${m.name}</option>`);
-
-        const tbody = document.getElementById('ledgerBody');
-        tbody.innerHTML = '';
-        let tin = 0, tout = 0;
-        entries.forEach((e, i) => {
-            if(e.type === 'income') tin += parseFloat(e.amt); else tout += parseFloat(e.amt);
-            let wa = `https://wa.me/91${e.phone}?text=Hi ${e.name}, JSC Unit-ൽ നിങ്ങളുടെ ₹${e.amt} (${e.category}) ലഭിച്ചു. നന്ദി.`;
-            tbody.innerHTML += `<tr>
-                <td><b>${e.name}</b><br><small>${e.date} | ${e.category}</small></td>
-                <td style="color:${e.type==='income'?'green':'red'}">₹${e.amt}</td>
-                <td>
-                    <a href="${wa}" class="wa-single" target="_blank">WA</a>
-                    <button onclick="deleteEntry(${i})" style="width:auto; padding:5px; background:none; color:red;">❌</button>
-                </td>
-            </tr>`;
-        });
-        document.getElementById('totalIn').innerText = tin;
-        document.getElementById('totalOut').innerText = tout;
-        document.getElementById('balance').innerText = tin - tout;
-    }
-
-    function addEntry() {
-        const d = document.getElementById('date').value;
-        const c = document.getElementById('catSelect').value;
-        const m = document.getElementById('nameSelect').value.split('|');
-        const a = document.getElementById('amt').value;
-        const t = document.getElementById('type').value;
-        if(d && c && m[0] && a) {
-            entries.push({date:d, category:c, name:m[0], phone:m[1], amt:a, type:t});
-            localStorage.setItem('jsc_pro_data', JSON.stringify(entries));
-            renderAll();
-        } else { alert("വിവരങ്ങൾ പൂർണ്ണമല്ല"); }
-    }
-
-    function shareFullReport() {
-        let txt = `*${unitName} - ഫണ്ട് റിപ്പോർട്ട്*\n\n`;
-        txt += `வரവ്: ₹${document.getElementById('totalIn').innerText}\n`;
-        txt += `ചെലവ്: ₹${document.getElementById('totalOut').innerText}\n`;
-        txt += `ബാക്കി: ₹${document.getElementById('balance').innerText}\n\n`;
-        txt += `*ഇടപാടുകൾ:*\n`;
-        entries.slice(-10).forEach(e => {
-            txt += `${e.date} - ${e.name}: ₹${e.amt} (${e.type === 'income' ? 'IN' : 'OUT'})\n`;
-        });
-        window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`);
-    }
-
-    function exportToExcel() {
-        let csv = "Date,Name,Category,Amount,Type\n";
-        entries.forEach(e => csv += `${e.date},${e.name},${e.category},${e.amt},${e.type}\n`);
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.setAttribute("download", "JSC_Report.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-
-    function deleteEntry(i) { if(confirm("ഡിലീറ്റ് ചെയ്യണോ?")) { entries.splice(i,1); localStorage.setItem('jsc_pro_data',JSON.stringify(entries)); renderAll(); } }
-
-    renderAll();
-</script>
-</body>
-</html>
+        let n = prompt("യൂണിറ്റ് പേര് മാറ്റുക:", unitName);
+        if(n) { unitName = n; localStorage.setItem('unit_title', n
+                                                   
