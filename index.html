@@ -9,14 +9,12 @@
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; }
         .container { max-width: 600px; margin: auto; }
         
-        /* ഹെഡർ */
         .header { 
             background: var(--primary); color: white; padding: 20px; 
             border-radius: 15px; text-align: center; margin-bottom: 20px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer;
         }
 
-        /* കാർഡുകൾ */
         .card { 
             background: white; border-radius: 15px; margin-bottom: 12px; 
             box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow: hidden;
@@ -31,18 +29,15 @@
         .active .arrow { transform: rotate(180deg); }
         .arrow { transition: 0.3s; color: #999; }
 
-        /* ഡാഷ്ബോർഡ് */
         .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
         .stat-box { padding: 10px; border-radius: 10px; color: white; text-align: center; font-size: 11px; }
 
-        /* ഇൻപുട്ടുകൾ */
         input, select, button { 
             padding: 12px; border: 1px solid #ddd; border-radius: 10px; 
-            font-size: 15px; margin: 5px 0; width: 100%; box-sizing: border-box; 
+            font-size: 14px; margin: 5px 0; width: 100%; box-sizing: border-box; 
         }
         button { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; }
         
-        /* ലിസ്റ്റ് */
         .list-box { background: #f9f9f9; border-radius: 10px; max-height: 200px; overflow-y: auto; margin-bottom: 10px; }
         .list-item { 
             display: flex; justify-content: space-between; padding: 10px 15px; 
@@ -52,7 +47,9 @@
         table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
         td { padding: 10px 5px; border-bottom: 1px solid #f5f5f5; }
         
-        .no-print { display: block; }
+        .date-filter-box { background: #f1f1f1; padding: 10px; border-radius: 10px; margin-bottom: 15px; }
+        .date-filter-box label { font-size: 12px; color: #666; font-weight: bold; }
+        
         @media print { .no-print { display: none !important; } .card-content { display: block !important; } }
     </style>
 </head>
@@ -60,29 +57,43 @@
 
 <div class="container">
     <div class="header" onclick="editUnitName()">
-        <h2 id="unitTitle" style="margin:0; font-size: 20px;">JSC KONGANAMKODE UNIT</h2>
+        <h2 id="unitTitle" style="margin:0; font-size: 18px;">JSC KONGANAMKODE UNIT</h2>
         <small>Fund Manager Pro</small>
     </div>
 
-    <div class="card" id="c1">
+    <div class="card active" id="c1">
         <div class="card-header" onclick="toggle('c1')">
-            <span>📊 റിപ്പോർട്ടുകൾ (Reports)</span>
+            <span>📊 റിപ്പോർട്ടുകൾ (Custom Period)</span>
             <span class="arrow">▼</span>
         </div>
         <div class="card-content">
+            <div class="date-filter-box no-print">
+                <div style="display: flex; gap: 10px;">
+                    <div style="flex: 1;">
+                        <label>From:</label>
+                        <input type="date" id="fromDate" onchange="render()">
+                    </div>
+                    <div style="flex: 1;">
+                        <label>To:</label>
+                        <input type="date" id="toDate" onchange="render()">
+                    </div>
+                </div>
+            </div>
+
             <div class="stats">
                 <div class="stat-box" style="background:var(--income)">വരവ്<br><b id="totalIn">0</b></div>
                 <div class="stat-box" style="background:var(--expense)">ചെലവ്<br><b id="totalOut">0</b></div>
                 <div class="stat-box" style="background:var(--primary)">ബാക്കി<br><b id="balance">0</b></div>
             </div>
-            <div style="display:flex; gap:5px; margin-bottom:10px;">
-                <input type="month" id="monthFilter" onchange="render()">
-                <button onclick="window.print()" style="background:#555; width:80px;">PDF</button>
-            </div>
+            
             <table>
                 <tbody id="ledgerBody"></tbody>
             </table>
-            <button onclick="shareReport()" style="background:#25d366; margin-top:10px;">WhatsApp-ൽ അയക്കുക</button>
+            
+            <div style="display: flex; gap: 5px; margin-top: 10px;" class="no-print">
+                <button onclick="shareReport()" style="background:#25d366; flex: 2;">WhatsApp Share</button>
+                <button onclick="window.print()" style="background:#555; flex: 1;">PDF</button>
+            </div>
         </div>
     </div>
 
@@ -113,99 +124,5 @@
             <div id="catUI" class="list-box"></div>
             <div style="display:flex; gap:5px;">
                 <input type="text" id="newCat" placeholder="പുതിയ ഇനം">
-                <button onclick="addCat()" style="width:70px; background:var(--income)">Add</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="card" id="c4">
-        <div class="card-header" onclick="toggle('c4')">
-            <span>👥 മെമ്പർമാർ (Members)</span>
-            <span class="arrow">▼</span>
-        </div>
-        <div class="card-content">
-            <div id="memUI" class="list-box"></div>
-            <input type="text" id="mName" placeholder="പേര്">
-            <input type="number" id="mPhone" placeholder="ഫോൺ നമ്പർ">
-            <button onclick="addMem()" style="background:var(--income)">Add Member</button>
-        </div>
-    </div>
-</div>
-
-<script>
-    let entries = JSON.parse(localStorage.getItem('jsc_data_v1')) || [];
-    let members = JSON.parse(localStorage.getItem('jsc_mems_v1')) || [];
-    let cats = JSON.parse(localStorage.getItem('jsc_cats_v1')) || ["മാസവരി"];
-    let unit = localStorage.getItem('jsc_unit_v1') || "JSC KONGANAMKODE UNIT";
-
-    function toggle(id) { document.getElementById(id).classList.toggle('active'); }
-
-    function render() {
-        document.getElementById('unitTitle').innerText = unit;
-        document.getElementById('catUI').innerHTML = cats.map((c, i) => `<div class="list-item">${c} <span onclick="delCat(${i})" style="color:red">✕</span></div>`).join('');
-        document.getElementById('memUI').innerHTML = members.map((m, i) => `<div class="list-item">${m.name} <span onclick="delMem(${i})" style="color:red">✕</span></div>`).join('');
-        
-        document.getElementById('catSelect').innerHTML = '<option value="">ഇനം തിരഞ്ഞെടുക്കുക</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
-        document.getElementById('nameSelect').innerHTML = '<option value="">മെമ്പറെ തിരഞ്ഞെടുക്കുക</option>' + members.map(m => `<option value="${m.name}|${m.phone}">${m.name}</option>`).join('');
-
-        const month = document.getElementById('monthFilter').value;
-        const tbody = document.getElementById('ledgerBody');
-        tbody.innerHTML = '';
-        let tin = 0, tout = 0;
-
-        entries.filter(e => month ? e.date.startsWith(month) : true).reverse().forEach((e, i) => {
-            let isInc = e.type === 'income';
-            if(isInc) tin += parseFloat(e.amt); else tout += parseFloat(e.amt);
-            tbody.innerHTML += `<tr>
-                <td><b>${e.name}</b><br><small>${e.date} | ${e.category}</small></td>
-                <td style="color:${isInc?'green':'red'}">₹${e.amt} ${isInc?'✅':'❌'}</td>
-                <td><span onclick="delEntry(${entries.indexOf(e)})">🗑️</span></td>
-            </tr>`;
-        });
-        document.getElementById('totalIn').innerText = tin;
-        document.getElementById('totalOut').innerText = tout;
-        document.getElementById('balance').innerText = tin - tout;
-    }
-
-    function addEntry() {
-        const d = document.getElementById('date').value;
-        const c = document.getElementById('catSelect').value;
-        const m = document.getElementById('nameSelect').value.split('|');
-        const a = document.getElementById('amt').value;
-        const t = document.getElementById('type').value;
-        if(d && c && m[0] && a) {
-            entries.push({date:d, category:c, name:m[0], phone:m[1], amt:a, type:t});
-            localStorage.setItem('jsc_data_v1', JSON.stringify(entries));
-            render();
-            if(confirm("Saved! Send to WhatsApp?")) {
-                let msg = `*${unit}*\n\nHi ${m[0]},\nനിങ്ങളുടെ ₹${a} (${c}) ലഭിച്ചു. ✅\nനന്ദി.`;
-                window.open(`https://wa.me/91${m[1]}?text=${encodeURIComponent(msg)}`);
-            }
-        }
-    }
-
-    function shareReport() {
-        let txt = `*${unit} - റിപ്പോർട്ട്*\n\nവരവ്: ₹${document.getElementById('totalIn').innerText}\nചെലവ്: ₹${document.getElementById('totalOut').innerText}\nബാക്കി: ₹${document.getElementById('balance').innerText}`;
-        window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`);
-    }
-
-    function addMem() {
-        let n = document.getElementById('mName').value;
-        let p = document.getElementById('mPhone').value;
-        if(n && p) { members.push({name:n, phone:p}); localStorage.setItem('jsc_mems_v1', JSON.stringify(members)); render(); }
-    }
-
-    function addCat() {
-        let c = document.getElementById('newCat').value;
-        if(c) { cats.push(c); localStorage.setItem('jsc_cats_v1', JSON.stringify(cats)); render(); }
-    }
-
-    function delEntry(i) { if(confirm("Delete?")) { entries.splice(i,1); localStorage.setItem('jsc_data_v1', JSON.stringify(entries)); render(); } }
-    function delMem(i) { members.splice(i,1); localStorage.setItem('jsc_mems_v1', JSON.stringify(members)); render(); }
-    function delCat(i) { cats.splice(i,1); localStorage.setItem('jsc_cats_v1', JSON.stringify(cats)); renderAll(); }
-    function editUnitName() { let n = prompt("Unit Name:", unit); if(n) { unit = n; localStorage.setItem('jsc_unit_v1', n); render(); } }
-
-    render();
-</script>
-</body>
-</html>
+                <button onclick="addCat()" style="width:70px; background:var(--
+                    
