@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rupee Ledger Pro - JSC Panavoor</title>
+    <style>
+        :root {
+            --primary: #1a73e8;
+            --income: #28a745;
+            --expense: #dc3545;
+            --bg: #f8f9fa;
+        }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg); margin: 0; padding: 15px; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: var(--primary); margin-bottom: 5px; }
+        .subtitle { text-align: center; color: #666; font-size: 0.9em; margin-bottom: 20px; }
+        
+        .summary { display: flex; gap: 10px; margin-bottom: 20px; }
+        .card { flex: 1; padding: 15px; border-radius: 10px; color: white; text-align: center; }
+        .card.inc { background: var(--income); }
+        .card.exp { background: var(--expense); }
+        .card.bal { background: var(--primary); }
+
+        .form-group { display: flex; flex-direction: column; gap: 10px; background: #eee; padding: 15px; border-radius: 10px; }
+        input, select, button { padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; }
+        button { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; }
+        button:active { transform: scale(0.98); }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #f1f1f1; font-size: 14px; }
+        .type-inc { color: var(--income); font-weight: bold; }
+        .type-exp { color: var(--expense); font-weight: bold; }
+        .delete-btn { color: #999; cursor: pointer; font-size: 12px; border: none; background: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Rupee Ledger Pro</h2>
+    <div class="subtitle">JSC Konganamkode Unit (Jilani Sharif Fund)</div>
+
+    <div class="summary">
+        <div class="card inc">വരവ്<br><span id="totalIncome">0</span></div>
+        <div class="card exp">ചെലവ്<br><span id="totalExpense">0</span></div>
+        <div class="card bal">ബാക്കി<br><span id="balance">0</span></div>
+    </div>
+
+    <div class="form-group">
+        <input type="text" id="desc" placeholder="വിവരണം (ഉദാ: Masavari)">
+        <input type="number" id="amt" placeholder="തുക (Amount)">
+        <select id="type">
+            <option value="income">വരവ് (Income)</option>
+            <option value="expense">ചെലവ് (Expense)</option>
+        </select>
+        <button onclick="addTransaction()">Add Entry</button>
+    </div>
+
+    <table id="ledgerTable">
+        <thead>
+            <tr>
+                <th>വിവരണം</th>
+                <th>തുക</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="list"></tbody>
+    </table>
+    <button onclick="clearAll()" style="background:#666; margin-top: 20px; width: 100%;">Clear All Data</button>
+</div>
+
+<script>
+    let transactions = JSON.parse(localStorage.getItem('jsc_ledger')) || [];
+
+    function updateUI() {
+        const list = document.getElementById('list');
+        list.innerHTML = '';
+        let inc = 0, exp = 0;
+
+        transactions.forEach((t, index) => {
+            const row = document.createElement('tr');
+            const amountClass = t.type === 'income' ? 'type-inc' : 'type-exp';
+            if(t.type === 'income') inc += parseFloat(t.amt);
+            else exp += parseFloat(t.amt);
+
+            row.innerHTML = `
+                <td>${t.desc}</td>
+                <td class="${amountClass}">₹${t.amt}</td>
+                <td><button class="delete-btn" onclick="remove(${index})">❌</button></td>
+            `;
+            list.appendChild(row);
+        });
+
+        document.getElementById('totalIncome').innerText = inc;
+        document.getElementById('totalExpense').innerText = exp;
+        document.getElementById('balance').innerText = inc - exp;
+        localStorage.setItem('jsc_ledger', JSON.stringify(transactions));
+    }
+
+    function addTransaction() {
+        const desc = document.getElementById('desc').value;
+        const amt = document.getElementById('amt').value;
+        const type = document.getElementById('type').value;
+
+        if (desc === '' || amt === '') {
+            alert('ദയവായി വിവരങ്ങളും തുകയും നൽകുക');
+            return;
+        }
+
+        transactions.push({ desc, amt, type });
+        document.getElementById('desc').value = '';
+        document.getElementById('amt').value = '';
+        updateUI();
+    }
+
+    function remove(index) {
+        transactions.splice(index, 1);
+        updateUI();
+    }
+
+    function clearAll() {
+        if(confirm("എല്ലാ വിവരങ്ങളും ഒഴിവാക്കണോ?")) {
+            transactions = [];
+            updateUI();
+        }
+    }
+
+    updateUI();
+</script>
+
+</body>
+</html>
