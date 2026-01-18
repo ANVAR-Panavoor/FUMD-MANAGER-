@@ -9,6 +9,7 @@
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; }
         .container { max-width: 1000px; margin: auto; background: white; padding: 15px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         .unit-header { text-align: center; font-weight: bold; padding: 12px; cursor: pointer; background: #e8f0fe; border-radius: 10px; margin-bottom: 20px; color: var(--primary); border: 2px dashed #1a73e8; }
+        
         .dashboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
         .card { padding: 15px; border-radius: 12px; color: white; text-align: center; font-size: 13px; font-weight: bold; }
         .card.in { background: var(--income); }
@@ -26,7 +27,7 @@
         button { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; }
         
         .list-item { display: flex; justify-content: space-between; align-items: center; background: white; padding: 10px; border-radius: 8px; margin-bottom: 5px; border: 1px solid #eee; }
-        .del-icon { color: #e74c3c; cursor: pointer; font-weight: bold; padding: 5px 10px; border: 1px solid #e74c3c; border-radius: 5px; width: auto !important; }
+        .del-btn { background: #e74c3c; color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px; width: auto !important; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; }
@@ -53,7 +54,7 @@
     </div>
 
     <div id="ledgerTab" class="section active">
-        <h3>പുതിയ എൻട്രി</h3>
+        <h3>പുതിയ എൻട്രി ചേർക്കുക</h3>
         <input type="date" id="date">
         <select id="catSelect"></select>
         <select id="nameSelect"></select>
@@ -66,7 +67,7 @@
 
         <div style="overflow-x:auto;">
             <table>
-                <thead><tr><th>വിവരം</th><th>തുക</th><th>Action</th></tr></thead>
+                <thead><tr><th>വിവരം</th><th>തുക</th><th>മാറ്റങ്ങൾ</th></tr></thead>
                 <tbody id="ledgerBody"></tbody>
             </table>
         </div>
@@ -75,21 +76,21 @@
     <div id="memberTab" class="section">
         <h3>മെമ്പർമാരെ ചേർക്കുക</h3>
         <input type="text" id="mName" placeholder="പേര്">
-        <input type="number" id="mPhone" placeholder="വാട്സാപ്പ് നമ്പർ">
-        <button onclick="addMember()" style="background: var(--income);">Add Member</button>
+        <input type="number" id="mPhone" placeholder="ഫോൺ നമ്പർ">
+        <button onclick="addMember()">Add Member</button>
         <div id="memberListUI" style="margin-top: 15px;"></div>
     </div>
 
     <div id="itemTab" class="section">
-        <h3>ഫണ്ട് ഇനങ്ങൾ ചേർക്കുക</h3>
-        <input type="text" id="newCat" placeholder="ഉദാ: മാസവരി, ഫണ്ട്">
-        <button onclick="addCategory()" style="background: var(--income);">Add Category</button>
+        <h3>ഇനങ്ങൾ ചേർക്കുക</h3>
+        <input type="text" id="newCat" placeholder="ഉദാ: മാസവരി">
+        <button onclick="addCategory()">Add Category</button>
         <div id="categoryListUI" style="margin-top: 15px;"></div>
     </div>
 
     <div id="reportTab" class="section">
         <h3>റിപ്പോർട്ട് ഓപ്ഷനുകൾ</h3>
-        <button onclick="shareFullReport()" style="background: #25D366; margin-bottom: 10px;">WhatsApp-ൽ അയക്കുക</button>
+        <button onclick="shareFullReport()" style="background: #25D366; margin-bottom: 10px;">WhatsApp വഴി അയക്കുക</button>
         <button onclick="exportToExcel()" style="background: #1d6f42;">Excel ഡൗൺലോഡ്</button>
     </div>
 
@@ -99,7 +100,7 @@
     let entries = JSON.parse(localStorage.getItem('jsc_pro_data')) || [];
     let members = JSON.parse(localStorage.getItem('jsc_members')) || [];
     let categories = JSON.parse(localStorage.getItem('jsc_cats')) || ["മാസവരി", "ജിലാനി ഷെരീഫ്"];
-    let unitName = localStorage.getItem('jsc_unit_title') || "JSC Konganamkode Unit";
+    let unitName = localStorage.getItem('unit_title') || "JSC Konganamkode Unit";
 
     function openTab(tabId) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -111,5 +112,115 @@
 
     function editUnitName() {
         let n = prompt("യൂണിറ്റ് പേര് മാറ്റുക:", unitName);
-        if(n) { unitName = n; localStorage.setItem('unit_title', n
-                                                   
+        if(n) { unitName = n; localStorage.setItem('unit_title', n); renderAll(); }
+    }
+
+    function addMember() {
+        let n = document.getElementById('mName').value;
+        let p = document.getElementById('mPhone').value;
+        if(n && p) {
+            members.push({name: n, phone: p});
+            localStorage.setItem('jsc_members', JSON.stringify(members));
+            document.getElementById('mName').value = ''; document.getElementById('mPhone').value = '';
+            renderAll();
+        }
+    }
+
+    function deleteMember(i) {
+        if(confirm("ഈ മെമ്പറെ ഒഴിവാക്കണോ?")) { members.splice(i, 1); localStorage.setItem('jsc_members', JSON.stringify(members)); renderAll(); }
+    }
+
+    function addCategory() {
+        let c = document.getElementById('newCat').value;
+        if(c) {
+            categories.push(c);
+            localStorage.setItem('jsc_cats', JSON.stringify(categories));
+            document.getElementById('newCat').value = '';
+            renderAll();
+        }
+    }
+
+    function deleteCategory(i) {
+        if(confirm("ഈ ഇനം ഒഴിവാക്കണോ?")) { categories.splice(i, 1); localStorage.setItem('jsc_cats', JSON.stringify(categories)); renderAll(); }
+    }
+
+    function renderAll() {
+        document.getElementById('unitDisplay').innerText = unitName;
+        
+        let catUI = document.getElementById('categoryListUI');
+        catUI.innerHTML = '';
+        categories.forEach((c, i) => {
+            catUI.innerHTML += `<div class="list-item">${c} <button class="del-btn" onclick="deleteCategory(${i})">Delete</button></div>`;
+        });
+
+        let memUI = document.getElementById('memberListUI');
+        memUI.innerHTML = '';
+        members.forEach((m, i) => {
+            memUI.innerHTML += `<div class="list-item">${m.name} <button class="del-btn" onclick="deleteMember(${i})">Delete</button></div>`;
+        });
+
+        document.getElementById('catSelect').innerHTML = '<option value="">ഇനം തിരഞ്ഞെടുക്കുക</option>' + categories.map(c => `<option value="${c}">${c}</option>`).join('');
+        document.getElementById('nameSelect').innerHTML = '<option value="">മെമ്പറെ തിരഞ്ഞെടുക്കുക</option>' + members.map(m => `<option value="${m.name}|${m.phone}">${m.name}</option>`).join('');
+
+        const tbody = document.getElementById('ledgerBody');
+        tbody.innerHTML = '';
+        let tin = 0, tout = 0;
+        entries.forEach((e, i) => {
+            if(e.type === 'income') tin += parseFloat(e.amt); else tout += parseFloat(e.amt);
+            let wa = `https://wa.me/91${e.phone}?text=${encodeURIComponent(unitName + ':\nHi ' + e.name + ', ₹' + e.amt + ' (' + e.category + ') ലഭിച്ചു. നന്ദി.')}`;
+            tbody.innerHTML += `<tr>
+                <td><b>${e.name}</b><br><small>${e.date}</small></td>
+                <td style="color:${e.type==='income'?'green':'red'}">₹${e.amt}</td>
+                <td>
+                    <a href="${wa}" class="wa-single" target="_blank">WA</a>
+                    <span onclick="deleteEntry(${i})" style="color:red; margin-left:10px; cursor:pointer;">❌</span>
+                </td>
+            </tr>`;
+        });
+
+        document.getElementById('totalIn').innerText = tin;
+        document.getElementById('totalOut').innerText = tout;
+        document.getElementById('balance').innerText = tin - tout;
+    }
+
+    function addEntry() {
+        const d = document.getElementById('date').value;
+        const c = document.getElementById('catSelect').value;
+        const m = document.getElementById('nameSelect').value.split('|');
+        const a = document.getElementById('amt').value;
+        const t = document.getElementById('type').value;
+        if(d && c && m[0] && a) {
+            entries.push({date:d, category:c, name:m[0], phone:m[1], amt:a, type:t});
+            localStorage.setItem('jsc_pro_data', JSON.stringify(entries));
+            renderAll();
+        } else { alert("വിവരങ്ങൾ നൽകുക"); }
+    }
+
+    function deleteEntry(i) { if(confirm("ഇത് ഒഴിവാക്കണോ?")) { entries.splice(i,1); localStorage.setItem('jsc_pro_data',JSON.stringify(entries)); renderAll(); } }
+
+    function shareFullReport() {
+        let txt = `*${unitName} - റിപ്പോർട്ട്*\n\n`;
+        txt += `വരവ്: ₹${document.getElementById('totalIn').innerText}\n`;
+        txt += `ചെലവ്: ₹${document.getElementById('totalOut').innerText}\n`;
+        txt += `ബാക്കി: ₹${document.getElementById('balance').innerText}\n\n`;
+        txt += `*അവസാന ഇടപാടുകൾ:*\n`;
+        entries.slice(-10).forEach(e => { txt += `${e.date} - ${e.name}: ₹${e.amt}\n`; });
+        window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`);
+    }
+
+    function exportToExcel() {
+        let csv = "Date,Name,Category,Amount,Type\n";
+        entries.forEach(e => csv += `${e.date},${e.name},${e.category},${e.amt},${e.type}\n`);
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute("download", "Report.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    renderAll();
+</script>
+</body>
+</html>
