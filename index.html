@@ -3,100 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fund Manager Pro</title>
+    <title>JSC Fund Manager Pro</title>
     <style>
         :root { --primary: #1a73e8; --income: #2ecc71; --expense: #e74c3c; --bg: #f0f2f5; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; }
-        .container { max-width: 1000px; margin: auto; background: white; padding: 15px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .unit-header { text-align: center; font-weight: bold; padding: 12px; cursor: pointer; background: #e8f0fe; border-radius: 10px; margin-bottom: 20px; color: var(--primary); border: 2px dashed #1a73e8; }
-        .dashboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
-        .card { padding: 15px; border-radius: 12px; color: white; text-align: center; font-size: 13px; font-weight: bold; }
-        .card.in { background: var(--income); }
-        .card.out { background: var(--expense); }
-        .card.bal { background: var(--primary); }
-        .section { background: #f8f9fa; padding: 15px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 25px; }
-        input, select, button { padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; margin: 5px 0; width: 100%; box-sizing: border-box; }
-        button { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; }
-        .list-box { background: white; border-radius: 8px; border: 1px solid #eee; margin-bottom: 15px; max-height: 180px; overflow-y: auto; }
-        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
-        table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 10px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; }
-        .report-selectors { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .container { max-width: 1000px; margin: auto; }
+        .unit-header { text-align: center; font-weight: bold; padding: 15px; background: white; border-radius: 15px; margin-bottom: 15px; color: var(--primary); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         
-        @media print {
-            .no-print { display: none !important; }
-            body { background: white; padding: 0; }
-            .container { box-shadow: none; border: none; width: 100%; max-width: 100%; }
-        }
+        /* പ്രധാന ബോക്സുകൾ */
+        .main-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 20px; }
+        .main-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h3 { margin-top: 0; color: #333; border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; }
+
+        /* റിപ്പോർട്ട് ടാബുകൾ */
+        .report-tabs { display: flex; gap: 10px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
+        .tab-btn { padding: 10px 15px; border-radius: 20px; border: none; background: #e8f0fe; color: var(--primary); font-weight: bold; cursor: pointer; white-space: nowrap; }
+        .tab-btn.active { background: var(--primary); color: white; }
+
+        .dashboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+        .stat-card { padding: 10px; border-radius: 10px; color: white; text-align: center; font-size: 12px; font-weight: bold; }
+        
+        input, select, button { padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; margin: 5px 0; width: 100%; box-sizing: border-box; }
+        button { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; }
+        
+        .list-box { background: #f8f9fa; border-radius: 8px; margin-bottom: 10px; max-height: 150px; overflow-y: auto; border: 1px solid #eee; }
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; }
+        .del-btn { color: red; font-weight: bold; cursor: pointer; padding: 5px; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #eee; }
+        
+        .filter-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .no-print { display: block; }
+        @media print { .no-print { display: none !important; } }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="unit-header" id="unitDisplay" onclick="editUnitName()">JSC Konganamkode Unit</div>
-    
-    <div class="dashboard">
-        <div class="card in" style="background-color: var(--income)">വരവ്<br><span id="totalIn">0</span></div>
-        <div class="card out" style="background-color: var(--expense)">ചെലവ്<br><span id="totalOut">0</span></div>
-        <div class="card bal" style="background-color: var(--primary)">ബാക്കി<br><span id="balance">0</span></div>
-    </div>
 
-    <div class="section">
-        <h3>റിപ്പോർട്ടുകൾ (Monthly & Annual)</h3>
-        <div class="report-selectors no-print">
-            <div>
-                <small>മാസം തിരഞ്ഞെടുക്കുക:</small>
-                <input type="month" id="monthFilter" onchange="renderAll()">
-            </div>
-            <div>
-                <small>വർഷം തിരഞ്ഞെടുക്കുക:</small>
-                <select id="yearFilter" onchange="renderAll()">
-                    <option value="">എല്ലാം</option>
-                    <option value="2025">2025</option>
-                    <option value="2026">2026</option>
-                </select>
-            </div>
-        </div>
-        <div style="display: flex; gap: 5px;" class="no-print">
-            <button onclick="shareFullReport()" style="background: #25D366;">WhatsApp Report</button>
-            <button onclick="window.print()" style="background: #e74c3c;">Download PDF</button>
+    <div class="main-card">
+        <h3>റിപ്പോർട്ടുകൾ (Reports)</h3>
+        <div class="report-tabs no-print">
+            <button class="tab-btn active" onclick="switchReport('all', this)">Total Report</button>
+            <button class="tab-btn" onclick="switchReport('income', this)">Income Only</button>
+            <button class="tab-btn" onclick="switchReport('expense', this)">Expense Only</button>
         </div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>വിവരം</th>
-                    <th>തുക</th>
-                    <th class="no-print">Action</th>
-                </tr>
-            </thead>
-            <tbody id="ledgerBody"></tbody>
-        </table>
+        <div class="filter-row no-print">
+            <input type="month" id="monthFilter" onchange="renderAll()">
+            <select id="yearFilter" onchange="renderAll()">
+                <option value="">Yearly (All)</option>
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+            </select>
+        </div>
+
+        <div class="dashboard">
+            <div class="stat-card" style="background: var(--income)">വരവ്<br><span id="totalIn">0</span></div>
+            <div class="stat-card" style="background: var(--expense)">ചെലവ്<br><span id="totalOut">0</span></div>
+            <div class="stat-card" style="background: var(--primary)">ബാക്കി<br><span id="balance">0</span></div>
+        </div>
+
+        <div style="overflow-x:auto;">
+            <table id="reportTable">
+                <thead><tr><th>വിവരം</th><th>തുക</th><th class="no-print"></th></tr></thead>
+                <tbody id="ledgerBody"></tbody>
+            </table>
+        </div>
+        
+        <div class="filter-row no-print" style="margin-top:15px;">
+            <button onclick="shareReport()" style="background: #25D366;">Share on WhatsApp</button>
+            <button onclick="window.print()" style="background: #e74c3c;">Save as PDF</button>
+        </div>
     </div>
 
-    <div class="section no-print">
-        <h3>പുതിയ ഇടപാട് (New Entry)</h3>
+    <br>
+
+    <div class="main-card no-print">
+        <h3>പുതിയ ഇടപാട് (Add Entry)</h3>
         <input type="date" id="date">
         <select id="catSelect"></select>
         <select id="nameSelect"></select>
-        <input type="number" id="amt" placeholder="തുക">
+        <input type="number" id="amt" placeholder="Amount (തുക)">
         <select id="type">
-            <option value="income">വരവ് (Cash Received ✅)</option>
-            <option value="expense">ചെലവ് (Payment Out ❌)</option>
+            <option value="income">വരവ് (Income ✅)</option>
+            <option value="expense">ചെലവ് (Expense ❌)</option>
         </select>
-        <button onclick="addEntry()">സേവ് ചെയ്ത് രസീത് അയക്കുക</button>
+        <button onclick="addEntry()">Save Transaction</button>
     </div>
 
-    <div class="section no-print">
-        <h3>മെമ്പർമാർ & ഇനങ്ങൾ</h3>
+    <br>
+
+    <div class="main-card no-print">
+        <h3>ഫണ്ട് ഇനങ്ങൾ (Categories)</h3>
+        <div id="categoryListUI" class="list-box"></div>
+        <div style="display:flex; gap:5px;">
+            <input type="text" id="newCat" placeholder="New Category">
+            <button onclick="addCategory()" style="width:100px; background:var(--income);">Add</button>
+        </div>
+    </div>
+
+    <br>
+
+    <div class="main-card no-print">
+        <h3>മെമ്പർമാർ (Members)</h3>
         <div id="memberListUI" class="list-box"></div>
-        <input type="text" id="mName" placeholder="മെമ്പർ പേര്">
-        <input type="number" id="mPhone" placeholder="ഫോൺ">
-        <button onclick="addMember()" style="background: var(--income);">Add Member</button>
-        
-        <div id="categoryListUI" class="list-box" style="margin-top: 20px;"></div>
-        <input type="text" id="newCat" placeholder="പുതിയ ഇനം">
-        <button onclick="addCategory()" style="background: var(--income);">Add Item</button>
+        <input type="text" id="mName" placeholder="Name">
+        <input type="number" id="mPhone" placeholder="WhatsApp Number">
+        <button onclick="addMember()" style="background:var(--income);">Add Member</button>
     </div>
 </div>
 
@@ -105,44 +121,48 @@
     let members = JSON.parse(localStorage.getItem('jsc_members')) || [];
     let categories = JSON.parse(localStorage.getItem('jsc_cats')) || ["മാസവരി", "ജിലാനി ഷെരീഫ്"];
     let unitName = localStorage.getItem('unit_title') || "JSC Konganamkode Unit";
+    let currentReportType = 'all';
 
-    function editUnitName() {
-        let n = prompt("Unit Name:", unitName);
-        if(n) { unitName = n; localStorage.setItem('unit_title', n); renderAll(); }
+    function switchReport(type, btn) {
+        currentReportType = type;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderAll();
     }
 
     function renderAll() {
         document.getElementById('unitDisplay').innerText = unitName;
         
-        // ടോപ്പിലെ ഇനങ്ങളും മെമ്പർമാരും അപ്‌ഡേറ്റ് ചെയ്യുക
-        document.getElementById('categoryListUI').innerHTML = categories.map((c, i) => `<div class="list-item">${c} <span style="color:red; cursor:pointer;" onclick="deleteCategory(${i})">X</span></div>`).join('');
-        document.getElementById('memberListUI').innerHTML = members.map((m, i) => `<div class="list-item">${m.name} <span style="color:red; cursor:pointer;" onclick="deleteMember(${i})">X</span></div>`).join('');
-        document.getElementById('catSelect').innerHTML = '<option value="">ഇനം തിരഞ്ഞെടുക്കുക</option>' + categories.map(c => `<option value="${c}">${c}</option>`).join('');
-        document.getElementById('nameSelect').innerHTML = '<option value="">മെമ്പറെ തിരഞ്ഞെടുക്കുക</option>' + members.map(m => `<option value="${m.name}|${m.phone}">${m.name}</option>`).join('');
+        // Render Lists
+        document.getElementById('categoryListUI').innerHTML = categories.map((c, i) => `<div class="list-item">${c} <span class="del-btn" onclick="deleteCategory(${i})">✕</span></div>`).join('');
+        document.getElementById('memberListUI').innerHTML = members.map((m, i) => `<div class="list-item">${m.name} <span class="del-btn" onclick="deleteMember(${i})">✕</span></div>`).join('');
+        
+        // Update Selects
+        document.getElementById('catSelect').innerHTML = '<option value="">Select Category</option>' + categories.map(c => `<option value="${c}">${c}</option>`).join('');
+        document.getElementById('nameSelect').innerHTML = '<option value="">Select Member</option>' + members.map(m => `<option value="${m.name}|${m.phone}">${m.name}</option>`).join('');
 
-        const monthVal = document.getElementById('monthFilter').value;
-        const yearVal = document.getElementById('yearFilter').value;
+        const month = document.getElementById('monthFilter').value;
+        const year = document.getElementById('yearFilter').value;
         const tbody = document.getElementById('ledgerBody');
         tbody.innerHTML = '';
-        
+
         let tin = 0, tout = 0;
 
-        // ഫിൽട്ടറിംഗ് ലോജിക്
-        const filtered = entries.filter(e => {
-            const matchMonth = monthVal ? e.date.startsWith(monthVal) : true;
-            const matchYear = yearVal ? e.date.startsWith(yearVal) : true;
-            return matchMonth && matchYear;
-        });
+        entries.forEach((e, idx) => {
+            const dateMatch = (month ? e.date.startsWith(month) : true) && (year ? e.date.startsWith(year) : true);
+            const typeMatch = (currentReportType === 'all') || (e.type === currentReportType);
 
-        filtered.slice().reverse().forEach((e, i) => {
-            let isInc = e.type === 'income';
-            if(isInc) tin += parseFloat(e.amt); else tout += parseFloat(e.amt);
-            
-            tbody.innerHTML += `<tr>
-                <td><b>${e.name}</b><br><small>${e.date} | ${e.category} ${isInc ? '✅' : '❌'}</small></td>
-                <td style="color:${isInc ? 'green' : 'red'}">₹${e.amt}</td>
-                <td class="no-print"><span onclick="deleteEntry(${entries.indexOf(e)})" style="color:red; cursor:pointer;">🗑️</span></td>
-            </tr>`;
+            if (dateMatch && typeMatch) {
+                let isInc = e.type === 'income';
+                if(isInc) tin += parseFloat(e.amt); else tout += parseFloat(e.amt);
+
+                let row = `<tr>
+                    <td><b>${e.name}</b><br><small>${e.date} | ${e.category} ${isInc?'✅':'❌'}</small></td>
+                    <td style="color:${isInc?'green':'red'}">₹${e.amt}</td>
+                    <td class="no-print"><span onclick="deleteEntry(${idx})" style="color:red; cursor:pointer;">🗑️</span></td>
+                </tr>`;
+                tbody.insertAdjacentHTML('afterbegin', row);
+            }
         });
 
         document.getElementById('totalIn').innerText = tin;
@@ -160,9 +180,18 @@
             entries.push({date:d, category:c, name:m[0], phone:m[1], amt:a, type:t});
             localStorage.setItem('jsc_pro_data', JSON.stringify(entries));
             renderAll();
-            let msg = `*${unitName}*\n\nപ്രിയപ്പെട്ട ${m[0]},\nനിങ്ങളുടെ ₹${a} (${c}) സ്വീകരിച്ചിരിക്കുന്നു. ✅\nനന്ദി.`;
-            window.open(`https://wa.me/91${m[1]}?text=${encodeURIComponent(msg)}`);
+            if(confirm("Saved! Send receipt to WhatsApp?")) {
+                let msg = `*${unitName}*\n\nപ്രിയപ്പെട്ട ${m[0]},\nനിങ്ങളുടെ ₹${a} (${c}) വരവ് വെച്ചിട്ടുണ്ട്. ✅\nനന്ദി.`;
+                window.open(`https://wa.me/91${m[1]}?text=${encodeURIComponent(msg)}`);
+            }
         }
+    }
+
+    function shareReport() {
+        let month = document.getElementById('monthFilter').value;
+        let title = currentReportType.toUpperCase() + " REPORT " + (month || "");
+        let txt = `*${unitName} - ${title}*\n\nTotal In: ₹${document.getElementById('totalIn').innerText}\nTotal Out: ₹${document.getElementById('totalOut').innerText}\nBalance: ₹${document.getElementById('balance').innerText}\n\nGenerated by JSC Pro.`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`);
     }
 
     function addMember() {
@@ -176,14 +205,10 @@
         if(c) { categories.push(c); localStorage.setItem('jsc_cats', JSON.stringify(categories)); renderAll(); }
     }
 
-    function deleteEntry(i) { if(confirm("ഡിലീറ്റ് ചെയ്യണോ?")) { entries.splice(i,1); localStorage.setItem('jsc_pro_data',JSON.stringify(entries)); renderAll(); } }
-    function deleteMember(i) { members.splice(i,1); localStorage.setItem('jsc_members',JSON.stringify(members)); renderAll(); }
-    function deleteCategory(i) { categories.splice(i,1); localStorage.setItem('jsc_cats',JSON.stringify(categories)); renderAll(); }
-
-    function shareFullReport() {
-        let txt = `*${unitName} - റിപ്പോർട്ട്*\nവരവ്: ₹${document.getElementById('totalIn').innerText} ✅\nചെലവ്: ₹${document.getElementById('totalOut').innerText} ❌\nബാക്കി: ₹${document.getElementById('balance').innerText}\n\n*വിവരങ്ങൾ താഴെ:*`;
-        window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`);
-    }
+    function deleteEntry(i) { if(confirm("Delete?")) { entries.splice(i,1); localStorage.setItem('jsc_pro_data',JSON.stringify(entries)); renderAll(); } }
+    function deleteMember(i) { if(confirm("Delete Member?")) { members.splice(i,1); localStorage.setItem('jsc_members',JSON.stringify(members)); renderAll(); } }
+    function deleteCategory(i) { if(confirm("Delete Category?")) { categories.splice(i,1); localStorage.setItem('jsc_cats',JSON.stringify(categories)); renderAll(); } }
+    function editUnitName() { let n = prompt("Unit Name:", unitName); if(n) { unitName = n; localStorage.setItem('unit_title', n); renderAll(); } }
 
     renderAll();
 </script>
