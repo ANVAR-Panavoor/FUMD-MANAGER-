@@ -3,126 +3,206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fund Manager Pro</title>
+    <title>JSC Fund Manager Pro</title>
     <style>
         :root { --primary: #075e54; --income: #25d366; --expense: #e74c3c; --bg: #ece5dd; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; }
         .container { max-width: 600px; margin: auto; }
         
-        .header { 
-            background: var(--primary); color: white; padding: 20px; 
-            border-radius: 15px; text-align: center; margin-bottom: 20px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer;
-        }
+        /* ഹെഡർ */
+        .header { background: var(--primary); color: white; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 15px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        
+        /* ബോക്സുകൾ */
+        .card { background: white; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid #ddd; }
+        .card-header { padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: #fff; font-weight: bold; color: #333; }
+        .card-content { padding: 15px; display: none; border-top: 1px solid #eee; }
+        
+        /* ബോക്സ് തുറക്കുമ്പോൾ */
+        .card.active .card-content { display: block; }
+        .card.active .card-header { background: #f9f9f9; }
 
-        .card { 
-            background: white; border-radius: 15px; margin-bottom: 12px; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow: hidden;
-        }
-        .card-header { 
-            padding: 15px 20px; cursor: pointer; display: flex; 
-            justify-content: space-between; align-items: center;
-            border-bottom: 1px solid #f0f0f0; font-weight: bold; color: #444;
-        }
-        .card-content { padding: 15px; display: none; }
-        .active .card-content { display: block; }
-        .active .arrow { transform: rotate(180deg); }
-        .arrow { transition: 0.3s; color: #999; }
+        /* കണക്കുകൾ (Stats) */
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-bottom: 15px; }
+        .stat-box { padding: 10px; border-radius: 8px; color: white; text-align: center; font-size: 11px; font-weight: bold; }
 
-        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
-        .stat-box { padding: 10px; border-radius: 10px; color: white; text-align: center; font-size: 11px; }
-
-        input, select, button { 
-            padding: 12px; border: 1px solid #ddd; border-radius: 10px; 
-            font-size: 14px; margin: 5px 0; width: 100%; box-sizing: border-box; 
-        }
+        /* ഇൻപുട്ടുകൾ */
+        input, select, button { padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; margin: 5px 0; width: 100%; box-sizing: border-box; }
         button { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; }
         
-        .list-box { background: #f9f9f9; border-radius: 10px; max-height: 200px; overflow-y: auto; margin-bottom: 10px; }
-        .list-item { 
-            display: flex; justify-content: space-between; padding: 10px 15px; 
-            border-bottom: 1px solid #eee; font-size: 14px; align-items: center;
-        }
+        /* ലിസ്റ്റ് രീതി */
+        .list-box { background: #f9f9f9; border-radius: 8px; max-height: 180px; overflow-y: auto; margin-bottom: 10px; border: 1px solid #eee; }
+        .list-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; font-size: 13px; align-items: center; }
 
-        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
-        td { padding: 10px 5px; border-bottom: 1px solid #f5f5f5; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        td { padding: 10px 5px; border-bottom: 1px solid #eee; }
         
-        .date-filter-box { background: #f1f1f1; padding: 10px; border-radius: 10px; margin-bottom: 15px; }
-        .date-filter-box label { font-size: 12px; color: #666; font-weight: bold; }
-        
-        @media print { .no-print { display: none !important; } .card-content { display: block !important; } }
+        .no-print { display: block; }
+        @media print { .no-print { display: none; } .card-content { display: block !important; } }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header" onclick="editUnitName()">
-        <h2 id="unitTitle" style="margin:0; font-size: 18px;">JSC KONGANAMKODE UNIT</h2>
+        <h2 id="uTitle" style="margin:0; font-size: 20px;">JSC KONGANAMKODE UNIT</h2>
         <small>Fund Manager Pro</small>
     </div>
 
     <div class="card active" id="c1">
-        <div class="card-header" onclick="toggle('c1')">
-            <span>📊 റിപ്പോർട്ടുകൾ (Custom Period)</span>
-            <span class="arrow">▼</span>
-        </div>
+        <div class="card-header" onclick="toggleBox('c1')">📊 റിപ്പോർട്ടുകൾ (Reports) <span>▼</span></div>
         <div class="card-content">
-            <div class="date-filter-box no-print">
-                <div style="display: flex; gap: 10px;">
-                    <div style="flex: 1;">
-                        <label>From:</label>
-                        <input type="date" id="fromDate" onchange="render()">
-                    </div>
-                    <div style="flex: 1;">
-                        <label>To:</label>
-                        <input type="date" id="toDate" onchange="render()">
-                    </div>
-                </div>
+            <div style="display: flex; gap: 5px; margin-bottom: 10px;" class="no-print">
+                <div style="flex:1"><small>From:</small><input type="date" id="fromDate" onchange="renderAll()"></div>
+                <div style="flex:1"><small>To:</small><input type="date" id="toDate" onchange="renderAll()"></div>
             </div>
-
             <div class="stats">
-                <div class="stat-box" style="background:var(--income)">വരവ്<br><b id="totalIn">0</b></div>
-                <div class="stat-box" style="background:var(--expense)">ചെലവ്<br><b id="totalOut">0</b></div>
-                <div class="stat-box" style="background:var(--primary)">ബാക്കി<br><b id="balance">0</b></div>
+                <div class="stat-box" style="background:var(--income)">വരവ്<br><b id="tIn">0</b></div>
+                <div class="stat-box" style="background:var(--expense)">ചെലവ്<br><b id="tOut">0</b></div>
+                <div class="stat-box" style="background:var(--primary)">ബാക്കി<br><b id="tBal">0</b></div>
             </div>
-            
-            <table>
-                <tbody id="ledgerBody"></tbody>
-            </table>
-            
-            <div style="display: flex; gap: 5px; margin-top: 10px;" class="no-print">
-                <button onclick="shareReport()" style="background:#25d366; flex: 2;">WhatsApp Share</button>
-                <button onclick="window.print()" style="background:#555; flex: 1;">PDF</button>
-            </div>
+            <table><tbody id="ledgerBody"></tbody></table>
+            <button onclick="shareReport()" style="background:#25d366; margin-top:10px;" class="no-print">WhatsApp Share</button>
         </div>
     </div>
 
     <div class="card" id="c2">
-        <div class="card-header" onclick="toggle('c2')">
-            <span>📝 പുതിയ ഇടപാട് (New Entry)</span>
-            <span class="arrow">▼</span>
-        </div>
+        <div class="card-header" onclick="toggleBox('c2')">📝 പുതിയ ഇടപാട് (Add Entry) <span>▼</span></div>
         <div class="card-content">
-            <input type="date" id="date">
-            <select id="catSelect"></select>
-            <select id="nameSelect"></select>
-            <input type="number" id="amt" placeholder="തുക (Amount)">
-            <select id="type">
-                <option value="income">വരവ് (Income ✅)</option>
-                <option value="expense">ചെലവ് (Expense ❌)</option>
+            <input type="date" id="inpDate">
+            <select id="selCat"></select>
+            <select id="selMem"></select>
+            <input type="number" id="inpAmt" placeholder="തുക (Amount)">
+            <select id="selType">
+                <option value="in">വരവ് (Income ✅)</option>
+                <option value="out">ചെലവ് (Expense ❌)</option>
             </select>
-            <button onclick="addEntry()">Save & Send Receipt</button>
+            <button onclick="saveEntry()">Save & Send Receipt</button>
         </div>
     </div>
 
     <div class="card" id="c3">
-        <div class="card-header" onclick="toggle('c3')">
-            <span>📂 ഫണ്ട് ഇനങ്ങൾ (Items)</span>
-            <span class="arrow">▼</span>
-        </div>
+        <div class="card-header" onclick="toggleBox('c3')">📂 ഫണ്ട് ഇനങ്ങൾ (Items) <span>▼</span></div>
         <div class="card-content">
-            <div id="catUI" class="list-box"></div>
+            <div id="catListUI" class="list-box"></div>
             <div style="display:flex; gap:5px;">
-                <input type="text" id="newCat" placeholder="പുതിയ ഇനം">
-                <button onclick="addCat()" style="width:70px; background:var(--
-                    
+                <input type="text" id="newCatName" placeholder="പുതിയ ഇനം">
+                <button onclick="addNewCat()" style="width:70px; background:var(--income)">Add</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card" id="c4">
+        <div class="card-header" onclick="toggleBox('c4')">👥 മെമ്പർമാർ (Members) <span>▼</span></div>
+        <div class="card-content">
+            <div id="memListUI" class="list-box"></div>
+            <input type="text" id="newMemName" placeholder="പേര്">
+            <input type="number" id="newMemPhone" placeholder="വാട്സാപ്പ് നമ്പർ">
+            <button onclick="addNewMem()" style="background:var(--income)">Add Member</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ഡാറ്റ ലോഡ് ചെയ്യുന്നു
+    let transactions = JSON.parse(localStorage.getItem('jsc_trans_v3')) || [];
+    let membersList = JSON.parse(localStorage.getItem('jsc_mems_v3')) || [];
+    let categoriesList = JSON.parse(localStorage.getItem('jsc_cats_v3')) || ["മാസവരി"];
+    let unitTitle = localStorage.getItem('jsc_unit_v3') || "JSC KONGANAMKODE UNIT";
+
+    // ബോക്സ് ടോഗിൾ ഫങ്ക്ഷൻ
+    function toggleBox(id) {
+        document.getElementById(id).classList.toggle('active');
+    }
+
+    // പേജ് ലോഡ് ആകുമ്പോൾ ചെയ്യേണ്ടവ
+    window.onload = function() {
+        document.getElementById('inpDate').value = new Date().toISOString().split('T')[0];
+        renderAll();
+    };
+
+    function renderAll() {
+        document.getElementById('uTitle').innerText = unitTitle;
+        
+        // ഇനങ്ങൾ ലിസ്റ്റ്
+        document.getElementById('catListUI').innerHTML = categoriesList.map((c, i) => 
+            `<div class="list-item">${c} <span onclick="delCat(${i})" style="color:red; cursor:pointer;">✕</span></div>`).join('');
+        
+        // മെമ്പർ ലിസ്റ്റ്
+        document.getElementById('memListUI').innerHTML = membersList.map((m, i) => 
+            `<div class="list-item">${m.n} <span onclick="delMem(${i})" style="color:red; cursor:pointer;">✕</span></div>`).join('');
+
+        // സെലക്ട് ബോക്സുകൾ
+        document.getElementById('selCat').innerHTML = '<option value="">ഇനം തിരഞ്ഞെടുക്കുക</option>' + 
+            categoriesList.map(c => `<option value="${c}">${c}</option>`).join('');
+        document.getElementById('selMem').innerHTML = '<option value="">മെമ്പറെ തിരഞ്ഞെടുക്കുക</option>' + 
+            membersList.map(m => `<option value="${m.n}|${m.p}">${m.n}</option>`).join('');
+
+        // റിപ്പോർട്ട് ഫിൽട്ടറിംഗ്
+        const fromD = document.getElementById('fromDate').value;
+        const toD = document.getElementById('toDate').value;
+        const tbody = document.getElementById('ledgerBody');
+        tbody.innerHTML = '';
+        
+        let totalIn = 0, totalOut = 0;
+
+        transactions.forEach((t, idx) => {
+            if ((fromD && t.d < fromD) || (toD && t.d > toD)) return;
+
+            if (t.type === 'in') totalIn += parseFloat(t.a);
+            else totalOut += parseFloat(t.a);
+
+            let row = `<tr>
+                <td><b>${t.n}</b><br><small>${t.d} | ${t.c}</small></td>
+                <td style="color:${t.type=='in'?'green':'red'}">₹${t.a}</td>
+                <td class="no-print"><span onclick="delTrans(${idx})" style="cursor:pointer;">🗑️</span></td>
+            </tr>`;
+            tbody.innerHTML = row + tbody.innerHTML;
+        });
+
+        document.getElementById('tIn').innerText = totalIn;
+        document.getElementById('tOut').innerText = totalOut;
+        document.getElementById('tBal').innerText = totalIn - totalOut;
+    }
+
+    function saveEntry() {
+        let d = document.getElementById('inpDate').value;
+        let c = document.getElementById('selCat').value;
+        let m = document.getElementById('selMem').value.split('|');
+        let a = document.getElementById('inpAmt').value;
+        let type = document.getElementById('selType').value;
+
+        if (d && c && m[0] && a) {
+            transactions.push({ d, c, n: m[0], p: m[1], a, type });
+            localStorage.setItem('jsc_trans_v3', JSON.stringify(transactions));
+            renderAll();
+            if (confirm("സേവ് ചെയ്തു! രസീത് അയക്കണോ?")) {
+                let msg = `*${unitTitle}*\n\nപ്രിയപ്പെട്ട ${m[0]},\nനിങ്ങളുടെ ₹${a} (${c}) ലഭിച്ചു. ✅\nനന്ദി.`;
+                window.open(`https://wa.me/91${m[1]}?text=${encodeURIComponent(msg)}`);
+            }
+        } else { alert("വിവരങ്ങൾ പൂർണ്ണമല്ല!"); }
+    }
+
+    function shareReport() {
+        let txt = `*${unitTitle} - റിപ്പോർട്ട്*\n\nവരവ്: ₹${document.getElementById('tIn').innerText}\nചെലവ്: ₹${document.getElementById('tOut').innerText}\nബാക്കി: ₹${document.getElementById('tBal').innerText}`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`);
+    }
+
+    function addNewMem() {
+        let n = document.getElementById('newMemName').value;
+        let p = document.getElementById('newMemPhone').value;
+        if (n && p) { membersList.push({ n, p }); localStorage.setItem('jsc_mems_v3', JSON.stringify(membersList)); renderAll(); }
+    }
+
+    function addNewCat() {
+        let c = document.getElementById('newCatName').value;
+        if (c) { categoriesList.push(c); localStorage.setItem('jsc_cats_v3', JSON.stringify(categoriesList)); renderAll(); }
+    }
+
+    function delTrans(i) { if (confirm("Delete?")) { transactions.splice(i, 1); localStorage.setItem('jsc_trans_v3', JSON.stringify(transactions)); renderAll(); } }
+    function delMem(i) { membersList.splice(i, 1); localStorage.setItem('jsc_mems_v3', JSON.stringify(membersList)); renderAll(); }
+    function delCat(i) { categoriesList.splice(i, 1); localStorage.setItem('jsc_cats_v3', JSON.stringify(categoriesList)); renderAll(); }
+    function editUnitName() { let n = prompt("Unit Name:", unitTitle); if (n) { unitTitle = n; localStorage.setItem('jsc_unit_v3', n); renderAll(); } }
+
+</script>
+</body>
+</html>
